@@ -23,7 +23,7 @@ object AppUtil {
     private var lastQueryTime: Long = 0
 
     fun getForegroundApp(context: Context): AppInfo? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val runningTasks: List<ActivityManager.RunningTaskInfo> = activityManager.getRunningTasks(1)
 
