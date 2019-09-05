@@ -12,7 +12,7 @@
 #### 下载源码：
 
 ```sh
-git clone https://github.com/iFLYOS-OPEN/EVS-SDK-Android
+git clone https://github.com/iFLYOS-OPEN/EVS-SDK-Android.git
 ```
 
 使用 Android Studio打开clone下来的工程。首次打开需要等待Gradle联网下载一些依赖库，可能需要较长时间，下载过程中需要保持网络畅通。
