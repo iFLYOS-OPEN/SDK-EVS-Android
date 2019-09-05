@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <SwitchPreference
+        android:key="switch_evs_local_alarm"
+        android:title="本地闹铃"
+        android:summary="是否使用本地闹铃"
+        android:defaultValue="true" />
+
+</PreferenceScreen>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/mi_disconnect"
+        android:title="@string/disconnect" />
+    <item
+        android:id="@+id/mi_clear_log"
+        android:title="@string/clear_log" />
+    <!--<item-->
+        <!--android:id="@+id/mi_settings"-->
+        <!--android:title="设置" />-->
+</menu>

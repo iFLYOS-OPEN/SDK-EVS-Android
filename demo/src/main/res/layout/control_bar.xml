@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:gravity="center"
+              android:textSize="10sp"
+              android:textColor="@android:color/black"
+              android:text="PlayControl"/>
+
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal">
+
+        <Button android:id="@+id/btn_previous"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.Button"
+                android:textColor="@android:color/black"
+                android:textSize="10sp"
+                android:text="PREVIOUS"/>
+
+        <Button android:id="@+id/btn_pause"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.Button"
+                android:textColor="@android:color/black"
+                android:textSize="10sp"
+                android:text="PAUSE"/>
+
+        <Button android:id="@+id/btn_next"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.Button"
+                android:textColor="@android:color/black"
+                android:textSize="10sp"
+                android:text="NEXT"/>
+
+        <Button android:id="@+id/btn_exit"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.Button"
+                android:textColor="@android:color/black"
+                android:textSize="10sp"
+                android:text="EXIT"/>
+
+    </LinearLayout>
+
+</LinearLayout>

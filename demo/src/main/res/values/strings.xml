@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">EVS SDK Demo</string>
+    <string name="evs_connect">EVS 连接</string>
+    <string name="connect">连接</string>
+    <string name="send">识别</string>
+    <string name="auth">授权</string>
+    <string name="disconnect">断开连接</string>
+    <string name="clear_log">清除日志</string>
+    <string name="reset">重置</string>
+    <string name="client_id">client id</string>
+    <string name="custom_device_id">自定义 device id</string>
+    <string name="request">请求</string>
+    <string name="open_in_browser">从浏览器打开</string>
+</resources>

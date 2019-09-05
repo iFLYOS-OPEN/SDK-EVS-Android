@@ -1,0 +1,36 @@
+image: lakoo/android-ndk:28-28.0.3-r18b
+
+before_script:
+  - echo "start CI running"
+  - mkdir -p apk
+
+stages:
+  - build_demo
+
+build_staging_demo:
+  stage: build_demo
+  script:
+    - echo -e "org.gradle.jvmargs=-Xmx1536m\nandroid.enableJetifier=true\nandroid.useAndroidX=true\nAAR_NAME=iflyos-evs-sdk-staging" > gradle.properties
+    - echo "start building staging demo"
+    - ./gradlew --stacktrace assembleDebug
+    - mv demo/build/outputs/apk/debug/*.apk apk/evs-sdk-staging-demo-$CI_PIPELINE_ID.apk
+  when: manual
+  artifacts:
+    paths:
+      - apk/
+  tags:
+    - iflytek-app-android
+
+build_production_demo:
+  stage: build_demo
+  script:
+    - echo -e "org.gradle.jvmargs=-Xmx1536m\nandroid.enableJetifier=true\nandroid.useAndroidX=true\nAAR_NAME=iflyos-app-sdk" > gradle.properties
+    - echo "start building production demo"
+    - ./gradlew --stacktrace assembleDebug
+    - mv demo/build/outputs/apk/debug/*.apk apk/app-sdk-demo.apk
+  when: manual
+  artifacts:
+    paths:
+      - apk/
+  tags:
+    - iflytek-app-android
