@@ -26,11 +26,11 @@ EVS接入协议的kotlin实现，主要包括 *网络连接*、*认证授权*、
 名称 | 说明
 ---|---
 网络连接 | 与iFLYOS建立WebSocket连接，支持ws和wss
-认证授权 | 按[认证授权协议]()对设备进行授权
+认证授权 | 按[认证授权协议](https://doc.iflyos.cn/device/auth.html#%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83api)对设备进行授权
 EVS协议解析 | 向iFLYOS发送EVS request，解析response
-模块接口定义和默认实现 | 提供EVS协议描述的[功能模块](../README.md#功能模块说明)接口定义，并提供默认实现
+模块接口定义和默认实现 | 提供EVS协议描述的[功能模块](https://doc.iflyos.cn/device/evs/#%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%9D%97%E8%AF%B4%E6%98%8E)接口定义，并提供默认实现
 
-SDK当前对[EVS接入协议](../README.md#功能模块说明)中各模块的实现情况如下：
+SDK当前对[EVS接入协议](https://doc.iflyos.cn/device/evs/#embedded-api-v1-%E4%BB%8B%E7%BB%8D)中各模块的实现情况如下：
 
 名称 | 说明 | 要求 | 消息 | 是否实现
 ---|---|---|---|---
