@@ -1,7 +1,7 @@
 package com.iflytek.cyber.evs.sdk.model
 
 internal object Constant {
-    const val WEB_SOCKET_URL = "wss://staging-ivs.iflyos.cn/embedded/v1?device_id=%s&token=%s"
+    const val WEB_SOCKET_URL = "wss://ivs.iflyos.cn/embedded/v1?device_id=%s&token=%s"
 
     fun getWebSocketUrl(serverUrl: String?, deviceId: String, token: String): String {
         if (!serverUrl.isNullOrEmpty()) {
