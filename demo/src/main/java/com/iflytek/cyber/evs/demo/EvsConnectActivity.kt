@@ -549,7 +549,7 @@ class EvsConnectActivity : AppCompatActivity() {
 
         if (notification == null) {
             notification = builder.setContent(contentViews)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(applicationInfo.icon)
                 .setAutoCancel(false)
                 .build()
 
