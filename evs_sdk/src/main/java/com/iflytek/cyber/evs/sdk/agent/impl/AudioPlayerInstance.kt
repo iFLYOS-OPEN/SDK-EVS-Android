@@ -8,7 +8,7 @@ import android.os.Looper
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.iflytek.cyber.embeddedclient.player.MediaSourceFactory
+import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
 import com.iflytek.cyber.evs.sdk.utils.Log
 
@@ -23,7 +23,14 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         context,
         DefaultRenderersFactory(context),
         DefaultTrackSelector(),
-        DefaultLoadControl()
+        DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                5000,
+                DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
+                100,
+                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+            )
+            .createDefaultLoadControl()
     )
     private val mMediaSourceFactory: MediaSourceFactory
 
@@ -66,7 +73,12 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
     init {
         player.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                listener?.onPlayerStateChanged(this@AudioPlayerInstance, type, playWhenReady, playbackState)
+                listener?.onPlayerStateChanged(
+                    this@AudioPlayerInstance,
+                    type,
+                    playWhenReady,
+                    playbackState
+                )
             }
 
             override fun onPlayerError(error: ExoPlaybackException?) {
@@ -93,8 +105,13 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
     }
 
     internal interface Listener {
-        fun initState()
-        fun onPlayerStateChanged(player: AudioPlayerInstance, type: String, playWhenReady: Boolean, playbackState: Int)
+        fun onPlayerStateChanged(
+            player: AudioPlayerInstance,
+            type: String,
+            playWhenReady: Boolean,
+            playbackState: Int
+        )
+
         fun onPlayerError(player: AudioPlayerInstance, type: String, error: ExoPlaybackException?)
         fun onPlayerPositionUpdated(player: AudioPlayerInstance, type: String, position: Long)
     }
@@ -111,25 +128,38 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         handler.post {
             val uri = Uri.parse(url)
             val mediaSource = mMediaSourceFactory.createHttpMediaSource(uri)
-            listener?.initState()
-            player.prepare(mediaSource, true, false)
             player.playWhenReady = true
+            player.prepare(mediaSource, true, false)
         }
 
         handler.post(positionUpdateRunnable)
     }
 
-    open var volGrowFlag = false
+    var volGrowFlag = false
 
     fun setVolume(volume: Float) {
-        player.volume = volume
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            player.volume = volume
+        } else {
+            handler.post {
+                player.volume = volume
+            }
+        }
     }
 
     fun getVolume() = player.volume
 
     fun resume() {
-        if (player.playbackState == Player.STATE_READY) {
-            player.playWhenReady = true
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            if (player.playbackState == Player.STATE_READY) {
+                player.playWhenReady = true
+            }
+        } else {
+            handler.post {
+                if (player.playbackState == Player.STATE_READY) {
+                    player.playWhenReady = true
+                }
+            }
         }
 
         handler.post(positionUpdateRunnable)
@@ -148,11 +178,11 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
     fun stop() {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             player.playWhenReady = false
-            player.stop(true)
+            //player.stop(true)
         } else {
             handler.post {
                 player.playWhenReady = false
-                player.stop(true)
+                //player.stop(true)
             }
         }
     }
@@ -169,11 +199,16 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
 
     fun getOffset(): Long {
         val position = player.currentPosition
-        return try {
+        val realPosition = try {
             position - player.currentTimeline.getPeriod(
                 player.currentPeriodIndex, period
             ).positionInWindowMs
         } catch (e: Exception) {
+            position
+        }
+        return if (realPosition == -1L) {
+            0
+        } else {
             position
         }
     }

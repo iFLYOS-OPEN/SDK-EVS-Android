@@ -4,17 +4,14 @@ import android.content.Context
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.view.SurfaceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
-import com.iflytek.cyber.embeddedclient.player.MediaSourceFactory
+import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
 
-class VideoPlayerInstance(context: Context, playerView: PlayerView) {
-    private val player = ExoPlayerFactory.newSimpleInstance(
-                            context,
-                            DefaultRenderersFactory(context),
-                            DefaultTrackSelector(),
-                            DefaultLoadControl())
+class VideoPlayerInstance {
+    private lateinit var player: SimpleExoPlayer
 
     private val mediaSourceFactory: MediaSourceFactory
 
@@ -25,11 +22,36 @@ class VideoPlayerInstance(context: Context, playerView: PlayerView) {
     private val handler = Handler()
 
     var resourceId: String? = null
+    var isStarted: Boolean = false
 
-    init {
+    constructor(context: Context) {
+        createPlayer(context)
         player.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                listener?.onPlayerStateChanged(this@VideoPlayerInstance, playWhenReady, playbackState)
+                listener?.onPlayerStateChanged(
+                    this@VideoPlayerInstance,
+                    playWhenReady,
+                    playbackState
+                )
+            }
+
+            override fun onPlayerError(error: ExoPlaybackException?) {
+                listener?.onPlayerError(this@VideoPlayerInstance, error)
+            }
+        })
+        player.playWhenReady = true
+        mediaSourceFactory = MediaSourceFactory(context, "")
+    }
+
+    constructor(context: Context, playerView: PlayerView) {
+        createPlayer(context)
+        player.addListener(object : Player.EventListener {
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                listener?.onPlayerStateChanged(
+                    this@VideoPlayerInstance,
+                    playWhenReady,
+                    playbackState
+                )
             }
 
             override fun onPlayerError(error: ExoPlaybackException?) {
@@ -40,6 +62,15 @@ class VideoPlayerInstance(context: Context, playerView: PlayerView) {
 
         playerView.player = player
         mediaSourceFactory = MediaSourceFactory(context, "")
+    }
+
+    private fun createPlayer(context: Context) {
+        player = ExoPlayerFactory.newSimpleInstance(
+            context,
+            DefaultRenderersFactory(context),
+            DefaultTrackSelector(),
+            DefaultLoadControl()
+        )
     }
 
     private val positionUpdateRunnable = object : Runnable {
@@ -57,13 +88,22 @@ class VideoPlayerInstance(context: Context, playerView: PlayerView) {
     }
 
     interface Listener {
-        fun onPlayerStateChanged(player: VideoPlayerInstance, playWhenReady: Boolean, playbackState: Int)
+        fun onPlayerStateChanged(
+            player: VideoPlayerInstance,
+            playWhenReady: Boolean,
+            playbackState: Int
+        )
+
         fun onPlayerError(player: VideoPlayerInstance, error: ExoPlaybackException?)
         fun onPlayerPositionUpdated(player: VideoPlayerInstance, position: Long)
     }
 
     fun setListener(listener: Listener) {
         this.listener = listener
+    }
+
+    fun setVideoSurfaceView(surfaceView: SurfaceView) {
+        player.setVideoSurfaceView(surfaceView)
     }
 
     fun play(url: String) {
@@ -78,30 +118,61 @@ class VideoPlayerInstance(context: Context, playerView: PlayerView) {
     }
 
     fun setVolume(volume: Float) {
-        player.volume = volume
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            player.volume = volume
+        } else {
+            handler.post {
+                player.volume = volume
+            }
+        }
     }
 
     fun getVolume() = player.volume
 
     fun resume() {
-        if (player.playbackState == Player.STATE_READY) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+//            if (player.playbackState == Player.STATE_READY) {
             player.playWhenReady = true
+//            }
+        } else {
+//            if (player.playbackState == Player.STATE_READY) {
+            handler.post {
+                player.playWhenReady = true
+            }
+//            }
         }
 
         handler.post(positionUpdateRunnable)
     }
 
     fun pause() {
-        player.playWhenReady = false
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            player.playWhenReady = false
+        } else {
+            handler.post {
+                player.playWhenReady = false
+            }
+        }
     }
 
     fun stop() {
-        player.playWhenReady = false
-        player.stop(true)
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            player.playWhenReady = false
+            player.stop(true)
+        } else {
+            handler.post {
+                player.playWhenReady = false
+                player.stop(true)
+            }
+        }
     }
 
     fun seekTo(offset: Long) {
-        player.seekTo(offset)
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            player.seekTo(offset)
+        } else {
+            player.seekTo(offset)
+        }
     }
 
     fun getOffset(): Long {

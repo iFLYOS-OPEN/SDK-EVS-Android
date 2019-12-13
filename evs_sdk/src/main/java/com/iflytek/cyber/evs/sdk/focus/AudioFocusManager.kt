@@ -1,5 +1,6 @@
 package com.iflytek.cyber.evs.sdk.focus
 
+import android.os.Handler
 import com.iflytek.cyber.evs.sdk.utils.Log
 
 object AudioFocusManager {
@@ -25,6 +26,8 @@ object AudioFocusManager {
     private val statusMap = HashMap<String, FocusStatus>()      // <channel, status>
     private var audioFocusObserver: AudioFocusObserver? = null
 
+    private val handler = Handler()
+
     internal val sortedChannels = arrayOf(
         CHANNEL_OUTPUT,
         CHANNEL_DIAL,
@@ -33,7 +36,7 @@ object AudioFocusManager {
         CHANNEL_CONTENT
     )
 
-    internal val priorityMap = HashMap<String, Int>()
+    private val priorityMap = HashMap<String, Int>()
 
     init {
         priorityMap[CHANNEL_OUTPUT] = 10
@@ -52,8 +55,7 @@ object AudioFocusManager {
     }
 
     private fun findForegroundChannel(): String? {
-        for (i in 0 until sortedChannels.size) {
-            val channel = sortedChannels[i]
+        for (channel in sortedChannels) {
             if (statusMap[channel] == FocusStatus.Foreground) {
                 return channel
             }
@@ -63,8 +65,7 @@ object AudioFocusManager {
     }
 
     private fun findBackgroundChannel(): String? {
-        for (i in 0 until sortedChannels.size) {
-            val channel = sortedChannels[i]
+        for (channel in sortedChannels) {
             if (statusMap[channel] == FocusStatus.Background) {
                 return channel
             }
@@ -86,7 +87,13 @@ object AudioFocusManager {
         if (statusMap[activeChannel] != FocusStatus.Foreground ||
             type != latestForegroundMap[activeChannel]
         ) {
-            var foreChannel = findForegroundChannel()
+            if (statusMap[activeChannel] == FocusStatus.Background &&
+                type != latestForegroundMap[activeChannel]
+            ) {
+                statusMap[activeChannel] = FocusStatus.Idle
+                onInternalFocusChanged(activeChannel)
+            }
+            val foreChannel = findForegroundChannel()
             if (foreChannel == null) {
                 statusMap[activeChannel] = FocusStatus.Foreground
             } else {
@@ -110,6 +117,9 @@ object AudioFocusManager {
 
                                     statusMap[activeChannel] = FocusStatus.Foreground
                                 }
+                                CHANNEL_CONTENT -> {
+                                    statusMap[activeChannel] = FocusStatus.Background
+                                }
                             }
                         }
                         CHANNEL_DIAL -> {
@@ -127,14 +137,25 @@ object AudioFocusManager {
                             }
                         }
                         CHANNEL_ALARM -> {
-                            statusMap[foreChannel] = FocusStatus.Idle
-                            onInternalFocusChanged(foreChannel)
+                            if (activeChannel == CHANNEL_OUTPUT || activeChannel == CHANNEL_INPUT) {
+                                statusMap[foreChannel] = FocusStatus.Idle
+                                onInternalFocusChanged(foreChannel)
 
-                            statusMap[activeChannel] = FocusStatus.Foreground
+                                statusMap[activeChannel] = FocusStatus.Foreground
+                            } else {
+                                statusMap[activeChannel] = FocusStatus.Background
+                            }
                         }
                         CHANNEL_CONTENT -> {
-                            statusMap[foreChannel] = FocusStatus.Background
-                            onInternalFocusChanged(foreChannel)
+                            if (activeChannel == CHANNEL_CONTENT) {
+                                if (latestForegroundMap[foreChannel] != type) {
+                                    statusMap[foreChannel] = FocusStatus.Idle
+                                    onInternalFocusChanged(foreChannel)
+                                }
+                            } else {
+                                statusMap[foreChannel] = FocusStatus.Background
+                                onInternalFocusChanged(foreChannel)
+                            }
 
                             statusMap[activeChannel] = FocusStatus.Foreground
                         }
@@ -266,10 +287,9 @@ object AudioFocusManager {
             statusMap[abandonChannel] != FocusStatus.Idle -> {
                 // 将状态置为丢失焦点
                 statusMap[abandonChannel] = FocusStatus.Idle
-                onInternalFocusChanged(abandonChannel)
+//                onInternalFocusChanged(abandonChannel)
                 latestForegroundMap.remove(abandonChannel)
-                for (i in 0 until sortedChannels.size) {
-                    val channel = sortedChannels[i]
+                for (channel in sortedChannels) {
                     if (statusMap[channel] == FocusStatus.Background) {
                         // 将某个背景的 channel 置为前景
                         statusMap[channel] = FocusStatus.Foreground
@@ -284,7 +304,10 @@ object AudioFocusManager {
 
     private fun onInternalFocusChanged(channel: String) {
         try {
-            audioFocusObserver?.onAudioFocusChanged(channel, latestForegroundMap[channel]!!, statusMap[channel]!!)
+            val type = latestForegroundMap[channel] ?: return
+            val status = statusMap[channel] ?: return
+
+            audioFocusObserver?.onAudioFocusChanged(channel, type, status)
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -1,29 +1,28 @@
 package com.iflytek.cyber.evs.sdk.socket
 
-import android.os.Build
 import java.nio.ByteBuffer
 
 internal object SocketManager {
     private var webSocket: EvsWebSocket? = null
 
     init {
-        webSocket = OkhttpWebSocket()
+        webSocket = OkHttpWebSocket()
     }
 
     fun connect(serverUrl: String?, deviceId: String, token: String) {
         webSocket?.connect(serverUrl, deviceId, token)
     }
 
-    fun send(message: String) {
-        webSocket?.send(message)
+    fun send(message: String): Result {
+        return webSocket?.send(message) ?: Result(Result.CODE_UNINITIALIZED, null)
     }
 
-    fun send(message: ByteArray) {
-        webSocket?.send(message)
+    fun send(message: ByteArray): Result {
+        return webSocket?.send(message) ?: Result(Result.CODE_UNINITIALIZED, null)
     }
 
-    fun send(message: ByteBuffer) {
-        webSocket?.send(message)
+    fun send(message: ByteBuffer): Result {
+        return webSocket?.send(message) ?: Result(Result.CODE_UNINITIALIZED, null)
     }
 
     fun disconnect() {
@@ -38,21 +37,111 @@ internal object SocketManager {
         webSocket?.removeListener(listener)
     }
 
-    interface SocketListener {
-        fun onConnected()
-        fun onDisconnected(code: Int, reason: String?, remote: Boolean)
-        fun onMessage(message: String)
-        fun onSend(message: Any)
+    fun onConnectFailed(t: Throwable?) {
+        webSocket?.onConnectFailed(t)
+    }
+
+    abstract class SocketListener {
+        open fun onConnected() {}
+        open fun onConnectFailed(t: Throwable?) {}
+        open fun onDisconnected(code: Int, reason: String?, remote: Boolean) {}
+        open fun onMessage(message: String) {}
+        open fun onSend(message: Any) {}
+        open fun onSendFailed(code: Int, reason: String?) {}
     }
 
     abstract class EvsWebSocket {
-        protected val onMessageListeners = HashSet<SocketListener>()
+        private val onMessageListeners = HashSet<SocketListener>()
 
         abstract fun connect(serverUrl: String?, deviceId: String, token: String)
-        abstract fun send(message: String)
-        abstract fun send(message: ByteArray)
-        abstract fun send(message: ByteBuffer)
+        abstract fun send(message: String): Result
+        abstract fun send(message: ByteArray): Result
+        abstract fun send(message: ByteBuffer): Result
         abstract fun disconnect()
+
+        open fun onConnected() {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onConnected()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
+
+        open fun onConnectFailed(t: Throwable?) {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onConnectFailed(t)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
+
+        open fun onDisconnected(code: Int, reason: String?, remote: Boolean) {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onDisconnected(code, reason, remote)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
+
+        open fun onMessage(message: String) {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onMessage(message)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
+
+        open fun onSend(message: Any) {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onSend(message)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
+
+        open fun onSendFailed(code: Int, reason: String?) {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onSendFailed(code, reason)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
 
         open fun addListener(listener: SocketListener) {
             synchronized(onMessageListeners) {

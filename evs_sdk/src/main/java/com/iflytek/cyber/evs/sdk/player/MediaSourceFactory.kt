@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iflytek.cyber.embeddedclient.player
+package com.iflytek.cyber.evs.sdk.player
 
 import android.content.Context
 import android.net.Uri

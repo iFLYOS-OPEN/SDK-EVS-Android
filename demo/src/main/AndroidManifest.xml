@@ -1,21 +1,27 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-          package="com.iflytek.cyber.evs.demo">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.iflytek.cyber.evs.demo">
 
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.GET_TASKS"/>
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:theme="@style/AppTheme">
         <service android:name=".EngineService" />
-        <service android:name=".TestService" />
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -30,6 +36,7 @@
             android:configChanges="screenLayout|screenSize|orientation|keyboard|keyboardHidden"
             android:label="@string/evs_connect"
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+        <activity android:name=".EditCustomContextActivity" />
         <activity
             android:name=".AuthActivity"
             android:label="@string/auth" />
@@ -37,8 +44,14 @@
             android:name=".JsonViewerActivity"
             android:label="json" />
         <activity
+            android:name=".SettingsActivity"
+            android:label="settings" />
+        <activity
             android:name=".VideoActivity"
             android:label="video" />
+        <activity
+            android:name=".ScanQRCodeActivity"
+            android:label="@string/scan_qrcode" />
 
     </application>
 </manifest>

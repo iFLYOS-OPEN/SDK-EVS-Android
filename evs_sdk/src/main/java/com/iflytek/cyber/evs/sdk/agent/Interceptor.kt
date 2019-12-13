@@ -1,10 +1,11 @@
 package com.iflytek.cyber.evs.sdk.agent
 
-import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import com.iflytek.cyber.evs.sdk.RequestManager
 import com.iflytek.cyber.evs.sdk.model.Constant
 
+/**
+ * 拦截器模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/interceptor.html#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8B%A6%E6%88%AA%E5%99%A8
+ */
 abstract class Interceptor {
     val version = "1.0"
     var contextJson = JSONObject()
@@ -15,24 +16,8 @@ abstract class Interceptor {
         const val NAME_AIUI = "${Constant.NAMESPACE_INTERCEPTOR}.aiui"
     }
 
-    abstract fun onResponse(payload: String)
-
     /**
-     * 更新 Context
-     * @param json 要同步的 Context，请注意 json 中若有 version 字段则会被覆盖
+     * response回调。
      */
-    fun updateContext(json: String) {
-        val context = JSON.parseObject(json)
-        context["version"] = version
-        contextJson = context
-    }
-
-    /**
-     * 请求发送 Interceptor 请求，对应 IVS 中的 Custom 事件
-     * @param payload 请求的 payload
-     */
-    fun sendRequest(payload: String) {
-        RequestManager.sendRequest(NAME_CUSTOM, JSON.parseObject(payload))
-    }
-
+    abstract fun onResponse(name: String, payload: JSONObject)
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iflytek.cyber.embeddedclient.player
+package com.iflytek.cyber.evs.sdk.player
 
 import android.os.Build
 import android.util.Log
@@ -25,7 +25,6 @@ import java.io.IOException
 import java.net.InetAddress
 import java.net.Socket
 import java.net.UnknownHostException
-import java.util.*
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory

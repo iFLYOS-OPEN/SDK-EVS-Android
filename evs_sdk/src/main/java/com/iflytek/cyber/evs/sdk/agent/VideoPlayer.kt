@@ -1,7 +1,11 @@
 package com.iflytek.cyber.evs.sdk.agent
 
+import androidx.annotation.CallSuper
 import com.iflytek.cyber.evs.sdk.model.Constant
 
+/**
+ * 视频播放器模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/video_player.html#%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E5%99%A8
+ */
 abstract class VideoPlayer {
     val version = "1.0"
 
@@ -9,17 +13,15 @@ abstract class VideoPlayer {
         const val NAME_PROGRESS_SYNC = "${Constant.NAMESPACE_VIDEO_PLAYER}.progress_sync"
         const val NAME_VIDEO_OUT = "${Constant.NAMESPACE_VIDEO_PLAYER}.video_out"
 
-        const val TYPE_PLAYBACK = "PLAYBACK"
-        const val TYPE_RING = "RING"
-        const val TYPE_TTS = "TTS"
-
         const val SYNC_TYPE_STARTED = "STARTED"
         const val SYNC_TYPE_FINISHED = "FINISHED"
         const val SYNC_TYPE_FAILED = "FAILED"
         const val SYNC_TYPE_NEARLY_FINISHED = "NEARLY_FINISHED"
 
         const val STATE_IDLE = "IDLE"
-        const val STATE_RUNNING = "RUNNING"
+        @Deprecated("", replaceWith = ReplaceWith(STATE_PLAYING))
+        const val STATE_RUNNING = "PLAYING"
+        const val STATE_PLAYING = "PLAYING"
         const val STATE_PAUSED = "PAUSED"
 
         const val KEY_URL = "url"
@@ -29,6 +31,7 @@ abstract class VideoPlayer {
         const val KEY_CONTROL = "control"
         const val KEY_BEHAVIOR = "behavior"
         const val KEY_FAILURE_CODE = "failure_code"
+        const val KEY_TYPE = "type"
 
         const val CONTROL_PLAY = "PLAY"
         const val CONTROL_PAUSE = "PAUSE"
@@ -48,8 +51,16 @@ abstract class VideoPlayer {
 
     var state = STATE_IDLE
         private set
+        get() {
+            return if (isVisible || field == STATE_PLAYING)
+                field
+            else
+                STATE_IDLE
+        }
     var resourceId: String? = null
         private set
+    var videoOffset = 0L
+    var isVisible = false
 
     private val listeners = HashSet<VideoStateChangedListener>()
 
@@ -67,7 +78,11 @@ abstract class VideoPlayer {
 
     abstract fun play(resourceId: String, url: String): Boolean
 
-    abstract fun seekTo(offset: Long): Boolean
+    @CallSuper
+    open fun seekTo(offset: Long): Boolean {
+        this.videoOffset = offset
+        return false
+    }
 
     abstract fun pause(): Boolean
 
@@ -75,7 +90,15 @@ abstract class VideoPlayer {
 
     abstract fun stop(): Boolean
 
+    abstract fun exit(): Boolean
+
+    abstract fun moveToBackground(): Boolean
+
+    abstract fun moveToForegroundIfAvailable(): Boolean
+
     fun onStarted(resourceId: String) {
+        state = STATE_PLAYING
+        this.resourceId = resourceId
         listeners.map {
             try {
                 it.onStarted(this, resourceId)
@@ -86,6 +109,7 @@ abstract class VideoPlayer {
     }
 
     fun onResumed(resourceId: String) {
+        state = STATE_PLAYING
         listeners.map {
             try {
                 it.onResumed(this, resourceId)
@@ -96,6 +120,7 @@ abstract class VideoPlayer {
     }
 
     fun onPaused(resourceId: String) {
+        state = STATE_PAUSED
         listeners.map {
             try {
                 it.onPaused(this, resourceId)
@@ -106,6 +131,7 @@ abstract class VideoPlayer {
     }
 
     fun onStopped(resourceId: String) {
+        state = STATE_PAUSED
         listeners.map {
             try {
                 it.onStopped(this, resourceId)
@@ -116,6 +142,7 @@ abstract class VideoPlayer {
     }
 
     fun onCompleted(resourceId: String) {
+        state = STATE_PAUSED
         listeners.map {
             try {
                 it.onCompleted(this, resourceId)
@@ -125,19 +152,9 @@ abstract class VideoPlayer {
         }
     }
 
-    fun onPressPlayOrPause() {
-
-    }
-
-    fun onPressPreious() {
-
-    }
-
-    fun onPressNext() {
-
-    }
-
     fun onPositionUpdated(resourceId: String, position: Long) {
+        videoOffset = position
+
         listeners.map {
             try {
                 it.onPositionUpdated(this, resourceId, position)
@@ -148,7 +165,15 @@ abstract class VideoPlayer {
     }
 
     fun onError(resourceId: String, errorCode: String) {
+        state = STATE_PAUSED
 
+        listeners.map {
+            try {
+                it.onError(this, resourceId, errorCode)
+            } catch (_: Exception) {
+
+            }
+        }
     }
 
     interface VideoStateChangedListener {

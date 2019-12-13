@@ -2,11 +2,12 @@ package com.iflytek.cyber.evs.sdk.agent.impl
 
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.iflytek.cyber.embeddedclient.player.MediaSourceFactory
-import com.iflytek.cyber.evs.sdk.agent.Alarm
+import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
+import com.iflytek.cyber.evs.sdk.utils.Log
 
 class AlarmPlayerInstance(context: Context) {
 
@@ -26,28 +27,36 @@ class AlarmPlayerInstance(context: Context) {
 
     private var listener: OnAlarmStateChangeListener? = null
 
+    private var onStartSent = false
+
     init {
         player.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                Log.d(type, "onPlayerStateChanged($playWhenReady, $playbackState)")
                 when (playbackState) {
+                    Player.STATE_IDLE -> {
+                        if (!playWhenReady) {
+                            listener?.onStopped()
+                        }
+                    }
                     Player.STATE_BUFFERING -> {
 
                     }
-                    Player.STATE_ENDED -> {
-                        if (playWhenReady)
-                            listener?.onStopped()
-                    }
                     Player.STATE_READY -> {
-                        if (playWhenReady)
-                            listener?.onStarted()
+                        if (!onStartSent) {
+                            onStartSent = true
+                            if (playWhenReady)
+                                listener?.onStarted()
+                        }
                     }
-                    Player.STATE_IDLE -> {
-
+                    Player.STATE_ENDED -> {
+                        listener?.onStopped()
                     }
                 }
             }
 
             override fun onPlayerError(error: ExoPlaybackException?) {
+                playLocalAlarm()
             }
         })
         mMediaSourceFactory = MediaSourceFactory(context, type)
@@ -64,12 +73,13 @@ class AlarmPlayerInstance(context: Context) {
     }
 
     fun play(url: String) {
-        player.stop(true)
-
-        val uri = Uri.parse(url)
-        val mediaSource = mMediaSourceFactory.createHttpMediaSource(uri)
-        player.prepare(mediaSource, true, false)
-        player.playWhenReady = true
+        onStartSent = false
+        Handler(player.applicationLooper).post {
+            val uri = Uri.parse(url)
+            val mediaSource = mMediaSourceFactory.createHttpMediaSource(uri)
+            player.playWhenReady = true
+            player.prepare(mediaSource, true, false)
+        }
     }
 
     fun playLocalAlarm() {
@@ -77,7 +87,10 @@ class AlarmPlayerInstance(context: Context) {
     }
 
     fun stop() {
-        player.playWhenReady = false
+        Handler(player.applicationLooper).post {
+            player.playWhenReady = false
+            player.stop()
+        }
     }
 
     interface OnAlarmStateChangeListener {

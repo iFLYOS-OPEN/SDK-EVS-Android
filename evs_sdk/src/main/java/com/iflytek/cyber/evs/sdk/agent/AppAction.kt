@@ -1,11 +1,15 @@
 package com.iflytek.cyber.evs.sdk.agent
 
+import android.util.SparseArray
 import com.alibaba.fastjson.JSONObject
 import com.iflytek.cyber.evs.sdk.model.Constant
 import com.iflytek.cyber.evs.sdk.utils.AppUtil
 
+/**
+ * App操作模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/app_action.html#app%E6%93%8D%E4%BD%9C
+ */
 abstract class AppAction {
-    val version = "1.0"
+    val version = "1.2"
 
     companion object {
         const val NAME_EXECUTE = "${Constant.NAMESPACE_APP_ACTION}.execute"
@@ -34,10 +38,12 @@ abstract class AppAction {
         const val KEY_END = "end"
         const val KEY_EXTRAS = "extras"
         const val KEY_FAILURE_CODE = "failure_code"
+        const val KEY_SUPPORTED_EXECUTE = "supported_execute"
 
         const val DATA_TYPE_ACTIVITY = "activity"
         const val DATA_TYPE_SERVICE = "service"
         const val DATA_TYPE_BROADCAST = "broadcast"
+        const val DATA_TYPE_EXIT = "exit"
 
         const val FAILURE_LEVEL_ACTION_UNSUPPORTED = 3
         const val FAILURE_LEVEL_APP_NOT_FOUND = 2
@@ -48,17 +54,18 @@ abstract class AppAction {
         const val FAILURE_CODE_INTERNAL_ERROR = "INTERNAL_ERROR"
     }
 
-    protected val codeMap: MutableMap<Int, String> = HashMap<Int, String>()
+    protected val codeMap = SparseArray<String>()
 
     init {
-        codeMap[FAILURE_LEVEL_ACTION_UNSUPPORTED] = FAILURE_CODE_ACTION_UNSUPPORTED
-        codeMap[FAILURE_LEVEL_APP_NOT_FOUND] = FAILURE_CODE_APP_NOT_FOUND
-        codeMap[FAILURE_LEVEL_INTERNAL_ERROR] = FAILURE_CODE_INTERNAL_ERROR
+        codeMap.put(FAILURE_LEVEL_ACTION_UNSUPPORTED, FAILURE_CODE_ACTION_UNSUPPORTED)
+        codeMap.put(FAILURE_LEVEL_APP_NOT_FOUND, FAILURE_CODE_APP_NOT_FOUND)
+        codeMap.put(FAILURE_LEVEL_INTERNAL_ERROR, FAILURE_CODE_INTERNAL_ERROR)
     }
 
+    abstract fun getSupportedExecute(): List<String>
+
     /**
-     * 检测云端actions的支持情况。
-     *
+     * 检测设备端对云端actions的支持情况。
      * @param payload 云端response的payload
      * @return 检测结果
      */
@@ -66,7 +73,6 @@ abstract class AppAction {
 
     /**
      * 执行云端下发的actions。
-     *
      * @param payload 云端response的payload
      * @param result 本地执行结果
      * @return 是否执行成功
@@ -74,7 +80,7 @@ abstract class AppAction {
     abstract fun execute(payload: JSONObject, result: JSONObject): Boolean
 
     /**
-     * 获取前台app信息。
+     * 获取前台app信息（包括包名、前台Activity类全名）。
      */
     abstract fun getForegroundApp(): AppUtil.AppInfo?
 }

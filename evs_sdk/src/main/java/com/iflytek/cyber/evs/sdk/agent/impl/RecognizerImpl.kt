@@ -3,7 +3,6 @@ package com.iflytek.cyber.evs.sdk.agent.impl
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.AudioRecord.getMinBufferSize
-import android.media.MediaRecorder
 import android.os.Build
 import com.iflytek.cyber.evs.sdk.agent.Recognizer
 
@@ -64,6 +63,10 @@ class RecognizerImpl : Recognizer() {
     override fun stopRecording() {
         recorder?.stop()
         recorder = null
+    }
+
+    override fun isRecording(): Boolean {
+        return recorder?.recordingState == AudioRecord.RECORDSTATE_RECORDING
     }
 
     override fun onDestroy() {

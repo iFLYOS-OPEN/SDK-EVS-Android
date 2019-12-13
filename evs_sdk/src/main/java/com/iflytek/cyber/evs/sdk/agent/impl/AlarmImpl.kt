@@ -11,7 +11,6 @@ import android.os.Looper
 import com.iflytek.cyber.evs.sdk.agent.Alarm
 import com.iflytek.cyber.evs.sdk.utils.Log
 import java.sql.Date
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -21,6 +20,8 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
     private val alarmPlayer = AlarmPlayerInstance(context)
 
     private var activeAlarmId: String? = null
+
+    private var packageName = ""
 
     companion object {
         private const val TAG = "AlarmImpl"
@@ -34,25 +35,38 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                ACTION_ALARM_ARRIVED -> {
+                "$packageName&$ACTION_ALARM_ARRIVED" -> {
                     val alarmId = intent.getStringExtra(KEY_ALARM_ID)
                     val url = intent.getStringExtra(KEY_URL)
+                    val timestamp = intent.getLongExtra(KEY_TIMESTAMP, -1L)
 
                     Log.d(TAG, "alarm arrived, {alarm_id=$alarmId, url=$url}.")
 
-                    activeAlarmId = alarmId
-                    alarmPlayer.play(url)
+                    val current = System.currentTimeMillis() / 1000
+                    if (current - timestamp > 5000) {
+                        Log.w(
+                            TAG,
+                            "alarm {alarm_id=$alarmId} expired. Now is $current, alarm time is $timestamp"
+                        )
+                    } else {
+                        activeAlarmId = alarmId
+                        alarmPlayer.play(url)
+                    }
 
                     dataHelper.deleteAlarm(alarmId)
+
+                    onAlarmUpdatedListener?.onAlarmUpdated()
                 }
             }
         }
     }
 
     init {
+        packageName = context.packageName
+
         // 注册广播接收
         val intentFilter = IntentFilter()
-        intentFilter.addAction(ACTION_ALARM_ARRIVED)
+        intentFilter.addAction("$packageName&$ACTION_ALARM_ARRIVED")
         context.registerReceiver(receiver, intentFilter)
 
         // 初始化闹钟服务
@@ -61,9 +75,11 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
             if (it.timestamp <= currentTimestamp) {
                 // 过时闹钟应被删除
                 dataHelper.deleteAlarm(it.alarmId)
+
+                onAlarmUpdatedListener?.onAlarmUpdated()
             } else {
                 // 重新设置闹钟到服务中
-                val intent = Intent(ACTION_ALARM_ARRIVED)
+                val intent = Intent("$packageName&$ACTION_ALARM_ARRIVED")
                 intent.putExtra(KEY_ALARM_ID, it.alarmId)
                 intent.putExtra(KEY_TIMESTAMP, it.timestamp)
                 intent.putExtra(KEY_URL, it.url)
@@ -77,7 +93,8 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
             }
         }
 
-        alarmPlayer.setOnAlarmStateChangeListener(object : AlarmPlayerInstance.OnAlarmStateChangeListener {
+        alarmPlayer.setOnAlarmStateChangeListener(object :
+            AlarmPlayerInstance.OnAlarmStateChangeListener {
             override fun onStarted() {
                 activeAlarmId?.let { alarmId ->
                     this@AlarmImpl.onAlarmStarted(alarmId)
@@ -86,8 +103,8 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
 
             override fun onStopped() {
                 activeAlarmId?.let { alarmId ->
-                    activeAlarmId = null
                     this@AlarmImpl.onAlarmStopped(alarmId)
+                    activeAlarmId = null
                 }
             }
 
@@ -95,17 +112,17 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
     }
 
     override fun stop() {
-        activeAlarmId = null
         alarmPlayer.stop()
     }
 
     override fun setAlarm(alarm: Item) {
+        super.setAlarm(alarm)
         val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
         val time = fmt.format(Date(alarm.timestamp * 1000))
 
         Log.d(TAG, "set alarm, {alarm_id=${alarm.alarmId}, time=$time}.")
 
-        val intent = Intent(ACTION_ALARM_ARRIVED)
+        val intent = Intent("$packageName&$ACTION_ALARM_ARRIVED")
         intent.putExtra(KEY_ALARM_ID, alarm.alarmId)
         intent.putExtra(KEY_TIMESTAMP, alarm.timestamp)
         intent.putExtra(KEY_URL, alarm.url)
@@ -121,11 +138,11 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
     }
 
     private fun cancelAlarm(alarmId: String) {
-        var alarm = dataHelper.queryAlarm(alarmId)
+        val alarm = dataHelper.queryAlarm(alarmId)
         alarm?.let {
             Log.d(TAG, "cancel unarrived alarm, {alarm_id=$alarmId}.")
 
-            val intent = Intent(ACTION_ALARM_ARRIVED)
+            val intent = Intent("$packageName&$ACTION_ALARM_ARRIVED")
             intent.putExtra(KEY_ALARM_ID, it.alarmId)
             intent.putExtra(KEY_TIMESTAMP, it.timestamp)
             intent.putExtra(KEY_URL, it.url)
@@ -149,6 +166,7 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
     }
 
     override fun deleteAlarm(alarmId: String) {
+        super.deleteAlarm(alarmId)
         cancelAlarm(alarmId)
 
         Log.d(TAG, "delete alarm, {alarm_id=$alarmId}.")
@@ -283,5 +301,4 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
             db.insert(NAME_TABLE_ALARMS, null, values)
         }
     }
-
 }

@@ -1,14 +1,53 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">EVS SDK Demo</string>
     <string name="evs_connect">EVS 连接</string>
     <string name="connect">连接</string>
     <string name="send">识别</string>
     <string name="auth">授权</string>
+    <string name="settings">参数设置</string>
     <string name="disconnect">断开连接</string>
     <string name="clear_log">清除日志</string>
     <string name="reset">重置</string>
     <string name="client_id">client id</string>
     <string name="custom_device_id">自定义 device id</string>
+    <string name="custom_scope_data">自定义 scope data</string>
     <string name="request">请求</string>
+    <string name="request_auth">请求授权</string>
     <string name="open_in_browser">从浏览器打开</string>
+    <string name="default_codec_format">RAW</string>
+    <string name="key_list_codec">evs_codec_format</string>
+    <string name="key_evs_ws_url">evs_web_socket_url</string>
+    <string name="title_evs_ws_url">EVS 服务地址</string>
+    <string name="default_ws_url">wss://ivs.iflyos.cn/embedded/v1</string>
+    <string name="key_auth_url">auth_url</string>
+    <string name="title_auth_url">授权地址</string>
+    <string name="default_auth_url">https://auth.iflyos.cn</string>
+    <string name="key_client_id">client_id</string>
+    <string name="title_client_id">client_id </string>
+    <string name="default_client_id" tools:ignore="TypographyDashes">ceb62135-38a7-42c3-b721-842f3ed596a8</string>
+    <string name="key_reset">reset</string>
+    <string name="key_device_id">device_id</string>
+    <string name="title_device_id">设备 ID</string>
+    <string name="auth_summary">正在使用的 client id: %s\n正在使用的设备 ID: %s</string>
+    <string name="request_params_summary">请求参数: %s</string>
+    <string name="current_auth_info">当前授权信息</string>
+    <string name="auth_params_summary">请求参数:\n%s\n当前授权信息:\n%s</string>
+    <string name="fill_current_context">填充当前 Context</string>
+    <string name="save">保存</string>
+    <string name="save_and_quit">保存并退出</string>
+    <string name="key_custom_context_enabled">custom_context_enabled</string>
+    <string name="key_custom_context">custom_context</string>
+    <string name="key_background_recognize">background_recognize</string>
+    <string name="key_recognize_profile">recognize_profile</string>
+    <string name="key_disable_response_sound">disable_response_sound</string>
+    <string name="background_recognize">背景录音</string>
+    <string name="cancel">取消</string>
+    <string name="scan_qrcode">扫描二维码</string>
+    <string name="copy_access_token">复制 access token</string>
+
+    <string-array name="codec_formats">
+        <item>RAW</item>
+        <item>SPEEX_WB_QUALITY_9</item>
+        <item>OPUS</item>
+    </string-array>
 </resources>

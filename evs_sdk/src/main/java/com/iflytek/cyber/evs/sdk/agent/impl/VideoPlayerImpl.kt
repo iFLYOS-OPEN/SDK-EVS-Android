@@ -1,33 +1,55 @@
 package com.iflytek.cyber.evs.sdk.agent.impl
 
 import android.content.Context
+import android.os.Handler
 import android.util.Log
+import android.view.SurfaceView
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
 import com.iflytek.cyber.evs.sdk.agent.VideoPlayer
+import java.lang.Thread.sleep
 
-class VideoPlayerImpl(context: Context, playerView: PlayerView) : VideoPlayer() {
+class VideoPlayerImpl : VideoPlayer {
     companion object {
         private const val TAG = "VideoPlayerImpl"
     }
 
     private var player: VideoPlayerInstance? = null
 
-    init {
+    var volGrowFlag = false
+
+    constructor(context: Context) {
+        player?.destroy()
+        player = VideoPlayerInstance(context)
+        player?.setListener(listener)
+    }
+
+    constructor(context: Context, playerView: PlayerView) {
         initPlayer(context, playerView)
     }
 
     private val listener = object : VideoPlayerInstance.Listener {
         private var playWhenReady = false
+        private var lastPlayState = -1
 
-        override fun onPlayerStateChanged(player: VideoPlayerInstance, playWhenReady: Boolean, playbackState: Int) {
+        fun initState() {
+            playWhenReady = false
+            lastPlayState = -1
+        }
+
+        override fun onPlayerStateChanged(
+            player: VideoPlayerInstance,
+            playWhenReady: Boolean,
+            playbackState: Int
+        ) {
             Log.d(TAG, "onPlayerStateChanged($playWhenReady, $playbackState)")
-            val isPlayingChanged = this.playWhenReady == playWhenReady
+            val isPlayingChanged = this.playWhenReady != playWhenReady
             this.playWhenReady = playWhenReady
 
             when (playbackState) {
                 Player.STATE_ENDED -> {
+                    player.isStarted = false
                     if (playWhenReady)
                         onCompleted(player.resourceId ?: "")
                 }
@@ -35,20 +57,34 @@ class VideoPlayerImpl(context: Context, playerView: PlayerView) : VideoPlayer() 
                     // ignore
                 }
                 Player.STATE_IDLE -> {
+                    player.isStarted = false
                     if (!playWhenReady) {
                         onStopped(player.resourceId ?: "")
                     }
                 }
                 Player.STATE_READY -> {
-                    if (isPlayingChanged) {
+                    if (lastPlayState == Player.STATE_BUFFERING) {
                         if (playWhenReady) {
-                            onResumed(player.resourceId ?: "")
-                        } else {
-                            onPaused(player.resourceId ?: "")
+                            if (!player.isStarted) {
+                                player.isStarted = true
+                                onStarted(player.resourceId ?: "")
+                            } else {
+                                onResumed(player.resourceId ?: "")
+                            }
+                        }
+                    } else {
+                        if (isPlayingChanged) {
+                            if (playWhenReady) {
+                                onResumed(player.resourceId ?: "")
+                            } else {
+                                onPaused(player.resourceId ?: "")
+                            }
                         }
                     }
                 }
             }
+
+            lastPlayState = playbackState
         }
 
         override fun onPlayerPositionUpdated(player: VideoPlayerInstance, position: Long) {
@@ -90,13 +126,19 @@ class VideoPlayerImpl(context: Context, playerView: PlayerView) : VideoPlayer() 
         return player
     }
 
+    fun setVideoSurfaceView(surfaceView: SurfaceView) {
+        getPlayer()?.setVideoSurfaceView(surfaceView)
+    }
+
     override fun play(resourceId: String, url: String): Boolean {
         Log.d(TAG, "try to play $url on video player")
         val player = getPlayer()
         player?.let {
+            listener.initState()
+
             it.resourceId = resourceId
+            it.isStarted = false
             it.play(url)
-            onStarted(player.resourceId ?: "")
             return true
         } ?: run {
             return false
@@ -127,7 +169,16 @@ class VideoPlayerImpl(context: Context, playerView: PlayerView) : VideoPlayer() 
         return true
     }
 
+    override fun exit(): Boolean {
+        val player = getPlayer()
+        player?.stop() ?: run {
+            return false
+        }
+        return true
+    }
+
     override fun seekTo(offset: Long): Boolean {
+        super.seekTo(offset)
         val player = getPlayer()
         player?.let {
             it.seekTo(offset)
@@ -143,5 +194,59 @@ class VideoPlayerImpl(context: Context, playerView: PlayerView) : VideoPlayer() 
 
     override fun getDuration(): Long {
         return getPlayer()?.getDuration() ?: 0
+    }
+
+    override fun moveToBackground(): Boolean {
+        getPlayer()?.run {
+            synchronized(volGrowFlag) {
+                volGrowFlag = false
+                val targetVolume = .1f
+                Handler(getLooper()).post {
+                    setVolume(targetVolume)
+                }
+            }
+            return true
+        } ?: run {
+            return false
+        }
+    }
+
+    override fun moveToForegroundIfAvailable(): Boolean {
+        getPlayer()?.run {
+            synchronized(volGrowFlag) {
+                volGrowFlag = true
+            }
+
+            val volume = getVolume()
+            val targetVolume = 1f
+
+            Thread {
+                var nextVolume = volume
+                val step = 0.05f
+                while (volGrowFlag && nextVolume != targetVolume) {
+                    nextVolume =
+                        if (nextVolume + step > targetVolume) targetVolume else nextVolume + step
+                    try {
+                        sleep(30)
+                    } catch (_: Exception) {
+                        //ignore
+                    }
+
+                    synchronized(volGrowFlag) {
+                        if (volGrowFlag) {
+                            Handler(getLooper()).post {
+                                setVolume(nextVolume)
+                            }
+                        } else {
+                            return@Thread
+                        }
+                    }
+                }
+            }.start()
+
+            return true
+        } ?: run {
+            return false
+        }
     }
 }

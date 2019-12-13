@@ -1,10 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-        xmlns:android="http://schemas.android.com/apk/res/android">
-    <SwitchPreference
-        android:key="switch_evs_local_alarm"
-        android:title="本地闹铃"
-        android:summary="是否使用本地闹铃"
-        android:defaultValue="true" />
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        android:defaultValue="@string/default_ws_url"
+        android:key="@string/key_evs_ws_url"
+        android:title="@string/title_evs_ws_url"
+        app:iconSpaceReserved="false" />
+
+    <EditTextPreference
+        android:defaultValue="@string/default_auth_url"
+        android:key="@string/key_auth_url"
+        android:title="@string/title_auth_url"
+        app:iconSpaceReserved="false" />
+
+    <Preference
+        android:defaultValue="@string/default_client_id"
+        android:key="@string/key_client_id"
+        android:title="@string/title_client_id"
+        app:iconSpaceReserved="false" />
+
+    <EditTextPreference
+        android:key="@string/key_device_id"
+        android:title="@string/title_device_id"
+        app:iconSpaceReserved="false" />
+
+    <ListPreference
+        android:defaultValue="@string/default_codec_format"
+        android:entries="@array/codec_formats"
+        android:entryValues="@array/codec_formats"
+        android:key="@string/key_list_codec"
+        android:summary="设置音频编码格式，当前： %s"
+        android:title="音频编码"
+        app:iconSpaceReserved="false" />
+
+    <Preference
+        android:key="@string/key_reset"
+        android:title="@string/reset"
+        app:iconSpaceReserved="false" />
 
 </PreferenceScreen>

@@ -43,9 +43,11 @@ class HeaderDevice(
             json["location"] = it.toJSONObject()
         }
         json["platform"] = platform.toJSONObject()
+
+        /* 最新协议中去掉flags
         flags?.let {
             json["flags"] = it.toJSONObject()
-        }
+        }*/
 
         return json
     }

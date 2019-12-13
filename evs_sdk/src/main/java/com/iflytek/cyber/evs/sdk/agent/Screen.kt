@@ -2,63 +2,54 @@ package com.iflytek.cyber.evs.sdk.agent
 
 import com.iflytek.cyber.evs.sdk.model.Constant
 
+/**
+ * 屏幕控制模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/screen.html#%E5%B1%8F%E5%B9%95%E6%8E%A7%E5%88%B6
+ */
 abstract class Screen {
-
-    val version = "1.0"
+    val version = "1.2"
 
     companion object {
+        const val NAME_SET_STATE = "${Constant.NAMESPACE_SCREEN}.set_state"
         const val NAME_SET_BRIGHTNESS = "${Constant.NAMESPACE_SCREEN}.set_brightness"
-        const val NAME_TEMPLATE_OUT = "${Constant.NAMESPACE_SCREEN}.template_out"
-
-        const val TYPE_PLAYER_INFO = "player_info_template"
-        const val TYPE_BODY_1 = "body_template_1"
-        const val TYPE_BODY_2 = "body_template_2"
-        const val TYPE_BODY_3 = "body_template_3"
-        const val TYPE_LIST_1 = "list_template_1"
-        const val TYPE_OPTION_2 = "option_template_2"
-        const val TYPE_OPTION_3 = "option_template_3"
-        const val TYPE_WEATHER = "weather_template"
 
         const val KEY_TYPE = "type"
+        const val KEY_STATE = "state"
+        const val KEY_BRIGHTNESS = "brightness"
+
+        const val STATE_ON = "ON"
+        const val STATE_OFF = "OFF"
+
+        const val TYPE_PERCENT = "percent"
     }
 
+    /**
+     * 获取亮度值类型，暂时只支持百分比。
+     */
+    open fun getBrightnessType() = TYPE_PERCENT
 
     /**
-     * 请求渲染模板
+     * 设置屏幕状态。
+     * @param state 状态：ON（打开）、OFF（熄屏）
+     * @return 是否设置成功
      */
-    abstract fun renderTemplate(payload: String)
+    abstract fun setState(state: String): Boolean
 
     /**
-     * 请求取消渲染模板
+     * 获取屏幕状态。
+     * @return 状态：ON（打开）、OFF（熄屏）
      */
-    abstract fun clearTemplate(payload: String)
+    abstract fun getState(): String
 
     /**
-     * 通知播放信息已更新，但未必是已经需要渲染。一般情况下只有当 [renderPlayerInfo] 调用时需要开发者在 UI 上渲染播放信息
+     * 设置屏幕亮度。
+     * @param brightness 亮度值（0-100）
+     * @return 是否设置成功
      */
-    abstract fun notifyPlayerInfoUpdated(resourceId: String, payload: String)
+    abstract fun setBrightness(brightness: Long): Boolean
 
     /**
-     * 请求渲染播放信息模板
+     * 获取屏幕亮度。
+     * @return 亮度值（0-100）
      */
-    abstract fun renderPlayerInfo(payload: String)
-
-    /**
-     * 请求清除播放信息
-     */
-    abstract fun clearPlayerInfo()
-
-    /**
-     * 模板是否常驻
-     *
-     * @return true 代表常驻，SDK 不会调用 [clearTemplate]
-     */
-    fun isTemplatePermanent() = false
-
-    /**
-     * 播放信息是否常驻
-     *
-     * @return true 代表常驻，SDK 不会调用 [clearPlayerInfo]
-     */
-    fun isPlayerInfoPermanent() = false
+    abstract fun getBrightness(): Long
 }

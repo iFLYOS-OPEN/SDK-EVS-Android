@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -13,26 +14,16 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
 
             <TextView
+                android:id="@+id/auth_summary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/client_id"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
-
-            <EditText
-                android:id="@+id/client_id"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1" />
-
-            <Button
-                android:id="@+id/reset_client_id"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/reset" />
+                android:fontFamily="monospace"
+                tools:text="@string/auth_summary" />
         </LinearLayout>
 
         <LinearLayout
@@ -41,17 +32,18 @@
             android:orientation="horizontal">
 
             <CheckBox
-                android:id="@+id/custom_device_id"
+                android:id="@+id/custom_scope_data"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/custom_device_id" />
+                android:text="@string/custom_scope_data" />
 
             <EditText
-                android:id="@+id/device_id"
+                android:id="@+id/scope_data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:enabled="false" />
+                android:enabled="false"
+                android:text="user_ivs_all" />
         </LinearLayout>
 
         <LinearLayout
@@ -63,37 +55,53 @@
                 android:id="@+id/request"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/request" />
+                android:text="@string/request_auth" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/request_params"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace" />
         </LinearLayout>
 
         <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="visible">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible">
 
             <TextView
-                    android:id="@+id/tv_response"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:background="#e9e9e9"
-                    android:visibility="invisible"/>
+                android:id="@+id/tv_response"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#e9e9e9"
+                android:fontFamily="monospace"
+                android:visibility="invisible" />
         </ScrollView>
 
         <ImageView
-                android:id="@+id/qr_code"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_margin="8dp"
-                android:background="@android:color/white" android:visibility="invisible"/>
+            android:id="@+id/qr_code"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="8dp"
+            android:background="@android:color/white"
+            android:visibility="invisible" />
 
         <Button
-                android:id="@+id/open_browser"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="@string/open_in_browser" android:visibility="invisible"/>
+            android:id="@+id/open_browser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/open_in_browser"
+            android:visibility="invisible" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

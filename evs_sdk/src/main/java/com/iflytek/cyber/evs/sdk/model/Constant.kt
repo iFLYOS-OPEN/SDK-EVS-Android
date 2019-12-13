@@ -15,6 +15,7 @@ internal object Constant {
     const val NAMESPACE_APP_ACTION = "app_action"
     const val NAMESPACE_AUDIO_PLAYER = "audio_player"
     const val NAMESPACE_INTERCEPTOR = "interceptor"
+    const val NAMESPACE_LAUNCHER = "launcher"
     const val NAMESPACE_PLAYBACK_CONTROLLER = "playback_controller"
     const val NAMESPACE_RECOGNIZER = "recognizer"
     const val NAMESPACE_SPEAKER = "speaker"
@@ -22,4 +23,5 @@ internal object Constant {
     const val NAMESPACE_SCREEN = "screen"
     const val NAMESPACE_TEMPLATE = "template"
     const val NAMESPACE_VIDEO_PLAYER = "video_player"
+    const val NAMESPACE_WAKE_WORD = "wakeword"
 }

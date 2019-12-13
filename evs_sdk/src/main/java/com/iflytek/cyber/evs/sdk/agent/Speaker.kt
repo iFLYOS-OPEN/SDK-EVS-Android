@@ -1,5 +1,8 @@
 package com.iflytek.cyber.evs.sdk.agent
 
+/**
+ * 扬声器控制模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/speaker.html#%E6%89%AC%E5%A3%B0%E5%99%A8%E6%8E%A7%E5%88%B6
+ */
 abstract class Speaker {
     val version = "1.0"
 
@@ -11,21 +14,20 @@ abstract class Speaker {
     }
 
     /**
-     * 返回音量类型
-     * @return 应返回 absolute 或 percent，默认为 percent。（暂时 type 仅为 percent）
+     * 返回音量类型，当前只支持百分比。
      */
     fun getType() = "percent"
 
     /**
-     * 请求获取当前的音量
-     * @return 若 type 为 percent，应返回 [0.100] 区间的音量。（暂时 type 仅为 percent）
+     * 获取当前音量。
+     * @return 音量值（0-100）
      */
     abstract fun getCurrentVolume(): Int
 
     /**
-     * 设置音量
-     * @param volume 当 type 为 percent 时，volume 取值为 [0,100]。（暂时 type 仅为 percent）
-     * @return 设置成功则返回 true，否则返回 false
+     * 设置音量。
+     * @param volume 音量值（0-100）
+     * @return 是否设置成功
      */
     abstract fun setVolume(volume: Int): Boolean
 }

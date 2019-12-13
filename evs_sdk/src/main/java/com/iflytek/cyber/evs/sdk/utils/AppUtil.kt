@@ -31,7 +31,10 @@ object AppUtil {
                 val pkgName = runningTasks[0].topActivity.packageName
                 val clsName = runningTasks[0].topActivity.className
 
-                return AppInfo("", pkgName, clsName)
+                return if (pkgName != context.packageName)
+                    AppInfo("", pkgName, clsName)
+                else
+                    AppInfo("", "DEFAULT", clsName)
             }
         } else {
             val time: Long = System.currentTimeMillis()
@@ -41,7 +44,7 @@ object AppUtil {
             var lastEvent: UsageEvents.Event? = null
 
             while (events.hasNextEvent()) {
-                var curEvent: UsageEvents.Event = UsageEvents.Event()
+                val curEvent: UsageEvents.Event = UsageEvents.Event()
                 events.getNextEvent(curEvent)
                 if (curEvent.packageName.isNullOrEmpty() || curEvent.className.isNullOrEmpty()) {
                     continue
@@ -53,10 +56,13 @@ object AppUtil {
             }
 
             if (lastEvent != null) {
-                lastForeApp = AppInfo("", lastEvent.packageName, lastEvent.className)
+                lastForeApp =
+                    if (lastEvent.packageName != context.packageName)
+                        AppInfo("", lastEvent.packageName, lastEvent.className)
+                    else
+                        AppInfo("", "DEFAULT", lastEvent.className)
+                lastQueryTime = time - 60 * 60 * 1000
             }
-
-            lastQueryTime = time
 
             return lastForeApp
         }
@@ -141,7 +147,7 @@ object AppUtil {
         val broadcastList: List<ResolveInfo> = pm.queryBroadcastReceivers(intent,
                             PackageManager.GET_RESOLVED_FILTER)
 
-        var infoList: MutableList<ResolveInfo> = ArrayList()
+        val infoList: MutableList<ResolveInfo> = ArrayList()
         infoList.addAll(activityList)
         infoList.addAll(serviceList)
         infoList.addAll(broadcastList)

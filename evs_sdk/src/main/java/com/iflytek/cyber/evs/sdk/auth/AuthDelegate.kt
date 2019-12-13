@@ -2,13 +2,26 @@ package com.iflytek.cyber.evs.sdk.auth
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONException
 import com.alibaba.fastjson.JSONObject
 import com.iflytek.cyber.evs.sdk.model.AuthResponse
 import com.iflytek.cyber.evs.sdk.model.DeviceCodeResponse
 import com.iflytek.cyber.evs.sdk.utils.Log
-import okhttp3.*
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.X509TrustManager
 
+/**
+ * 认证授权类。
+ */
 object AuthDelegate {
     private const val TAG = "AuthDelegate"
 
@@ -29,14 +42,19 @@ object AuthDelegate {
     private const val KEY_GRANT_TYPE = "grant_type"
     private const val KEY_ERROR = "error"
 
-    private const val ERROR_AUTHORIZATION_PENDING = "authorization_pending"
-    private const val ERROR_EXPIRED_TOKEN = "expired_token"
-    private const val ERROR_ACCESS_DENIED = "access_denied"
+    const val SCOPE_DATA_DEFAULT = "user_ivs_all"
+
+    const val ERROR_AUTHORIZATION_PENDING = "authorization_pending"
+    const val ERROR_EXPIRED_TOKEN = "expired_token"
+    const val ERROR_ACCESS_DENIED = "access_denied"
 
     private var httpClient: OkHttpClient? = null
 
     private val requestCache = HashSet<Thread>()
 
+    /**
+     * 设置auth请求的url。
+     */
     fun setAuthUrl(url: String?) {
         if (!url.isNullOrEmpty()) {
             AUTH_URL = url
@@ -45,6 +63,10 @@ object AuthDelegate {
         }
     }
 
+    /**
+     * 从SharedPreference里面获取授权信息。
+     * @return 授权结果，返回null则未授权
+     */
     fun getAuthResponseFromPref(context: Context): AuthResponse? {
         val pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         if (pref.contains(PREF_KEY)) {
@@ -55,6 +77,9 @@ object AuthDelegate {
         return null
     }
 
+    /**
+     * 移除授权信息。
+     */
     fun removeAuthResponseFromPref(context: Context) {
         val pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         if (pref.contains(PREF_KEY)) {
@@ -62,6 +87,9 @@ object AuthDelegate {
         }
     }
 
+    /**
+     * 设置授权信息到SharedPreference。
+     */
     fun setAuthResponseToPref(context: Context, authResponse: AuthResponse) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit().run {
             putString(PREF_KEY, JSON.toJSONString(authResponse))
@@ -69,29 +97,78 @@ object AuthDelegate {
         }
     }
 
-    fun registerTokenChangedListener(context: Context,
-             listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+    /**
+     * 注册授权token变化监听器。
+     */
+    fun registerTokenChangedListener(
+        context: Context,
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             .registerOnSharedPreferenceChangeListener(listener)
     }
 
-    fun unregisterTokenChangedListener(context: Context,
-                                     listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+    /**
+     * 移除授权token变化监听器。
+     */
+    fun unregisterTokenChangedListener(
+        context: Context,
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             .unregisterOnSharedPreferenceChangeListener(listener)
     }
 
     private fun createHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder().build()
+        val builder = OkHttpClient.Builder()
+            .writeTimeout(15L, TimeUnit.SECONDS)
+            .readTimeout(15L, TimeUnit.SECONDS)
+            .connectTimeout(15L, TimeUnit.SECONDS)
+            .callTimeout(15L, TimeUnit.SECONDS)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            val context = SSLContext.getInstance("TLSv1.2")
+            context.init(null, null, SecureRandom())
+
+            builder.sslSocketFactory(context.socketFactory,
+                object : X509TrustManager {
+                    override fun checkClientTrusted(
+                        chain: Array<out X509Certificate>?,
+                        authType: String?
+                    ) {
+
+                    }
+
+                    override fun checkServerTrusted(
+                        chain: Array<out X509Certificate>?,
+                        authType: String?
+                    ) {
+                    }
+
+                    override fun getAcceptedIssuers(): Array<X509Certificate> {
+                        return emptyArray()
+                    }
+
+                })
+        }
+        return builder.build()
     }
 
+    /**
+     * 开启认证授权过程。
+     * @param context Android上下文
+     * @param clientId 客户端id，在设备接入控制平台的设备信息页可以找到
+     * @param deviceId 端设备id，唯一标识一台设备
+     * @param responseCallback 请求结果回调
+     * @param authResponseCallback 授权结果回调
+     * @param customScopeData 请求授权的能力范围
+     */
     fun requestDeviceCode(
         context: Context,
         clientId: String,
         deviceId: String,
         responseCallback: ResponseCallback<DeviceCodeResponse>,
         authResponseCallback: AuthResponseCallback? = null,
-        customScopeData: String = KEY_USER_IVS_ALL
+        customScopeData: String = SCOPE_DATA_DEFAULT
     ) {
         cancelPolling()
 
@@ -111,6 +188,8 @@ object AuthDelegate {
 
                     Log.d(TAG, requestBody)
 
+                    Log.e(TAG, "url: $AUTH_URL_DEVICE_CODE")
+
                     val request = Request.Builder()
                         .url(AUTH_URL_DEVICE_CODE)
                         .post(
@@ -124,7 +203,8 @@ object AuthDelegate {
 
                     if (response.isSuccessful) {
                         response.body()?.string()?.let { body ->
-                            val deviceCodeResponse = JSON.parseObject(body, DeviceCodeResponse::class.java)
+                            val deviceCodeResponse =
+                                JSON.parseObject(body, DeviceCodeResponse::class.java)
                             responseCallback.onResponse(deviceCodeResponse)
 
                             // 开始轮询 token
@@ -151,6 +231,9 @@ object AuthDelegate {
         }
     }
 
+    /**
+     * 取消授权结果轮询。如果要中途退出授权过程，必须调用该方法。
+     */
     fun cancelPolling() {
         Log.d(TAG, "cancelPolling")
 
@@ -164,15 +247,22 @@ object AuthDelegate {
         requestCache.clear()
     }
 
+    /**
+     * 刷新accessToken。当授权的accessToken过期时，需要刷新才能使用EVS。
+     * @param context Android上下文
+     * @param refreshToken 用于获取新accessToken的刷新token
+     * @param refreshCallback 刷新结果回调
+     */
     fun refreshAccessToken(
-            context: Context,
-            refreshToken : String,
-            authResponseCallback: AuthResponseCallback) {
+        context: Context,
+        refreshToken: String,
+        refreshCallback: RefreshCallBack
+    ) {
         if (httpClient == null) {
             httpClient = createHttpClient()
         }
 
-        httpClient?.let { httpClient->
+        httpClient?.let { httpClient ->
             Thread {
                 try {
                     val requestBody = JSONObject()
@@ -199,9 +289,10 @@ object AuthDelegate {
                         val authResponse = JSON.parseObject(body, AuthResponse::class.java)
                         setAuthResponseToPref(context, authResponse)
 
-                        authResponseCallback?.onAuthSuccess(authResponse)
+                        refreshCallback.onRefreshSuccess(authResponse)
                     } else {
-                        authResponseCallback?.onAuthFailed(
+                        refreshCallback.onRefreshFailed(
+                            httpCode,
                             null,
                             IllegalStateException("Server return $httpCode while requesting")
                         )
@@ -210,7 +301,7 @@ object AuthDelegate {
                     Log.d(TAG, "polling exception.")
 
                     e.printStackTrace()
-                    authResponseCallback?.onAuthFailed(null, e)
+                    refreshCallback.onRefreshFailed(-1, null, e)
                 }
             }.start()
         }
@@ -259,21 +350,30 @@ object AuthDelegate {
                         return
                     } else {
                         if (httpCode in 400 until 500) {
-                            val json = JSON.parseObject(body)
-                            if (json?.containsKey(KEY_ERROR) == true) {
-                                when (val error = json.getString(KEY_ERROR)) {
-                                    ERROR_AUTHORIZATION_PENDING -> {
-                                        sleep(interval * 1000L)
+                            try {
+                                val json = JSON.parseObject(body)
+                                if (json?.containsKey(KEY_ERROR) == true) {
+                                    when (val error = json.getString(KEY_ERROR)) {
+                                        ERROR_AUTHORIZATION_PENDING -> {
+                                            sleep(interval * 1000L)
+                                        }
+                                        else -> {
+                                            // 可能是 expired_token, 或 access_denied
+                                            // 以上两种情况都不需要再轮询
+                                            authResponseCallback?.onAuthFailed(error, null)
+                                            return
+                                        }
                                     }
-                                    else -> {
-                                        // 可能是 expired_token, 或 access_denied
-                                        // 以上两种情况都不需要再轮询
-                                        authResponseCallback?.onAuthFailed(error, null)
-                                        return
-                                    }
+                                } else {
+                                    sleep(interval * 1000L)
                                 }
-                            } else {
-                                sleep(interval * 1000L)
+                            } catch (e: JSONException) {
+                                authResponseCallback?.onAuthFailed(
+                                    body,
+                                    null
+                                )
+                                e.printStackTrace()
+                                return
                             }
                         } else {
                             authResponseCallback?.onAuthFailed(
@@ -283,16 +383,17 @@ object AuthDelegate {
                             return
                         }
                     }
-                } catch (e : InterruptedException) {
+                } catch (e: InterruptedException) {
                     // interrupted, no need to callback
                     e.printStackTrace()
                     return
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     authResponseCallback?.onAuthFailed(null, e)
                     return
                 }
             }
+            authResponseCallback?.onAuthFailed(ERROR_EXPIRED_TOKEN, null)
         }
     }
 
@@ -304,5 +405,10 @@ object AuthDelegate {
     interface AuthResponseCallback {
         fun onAuthSuccess(authResponse: AuthResponse)
         fun onAuthFailed(errorBody: String?, throwable: Throwable?)
+    }
+
+    interface RefreshCallBack {
+        fun onRefreshSuccess(authResponse: AuthResponse)
+        fun onRefreshFailed(httpCode: Int, errorBody: String?, throwable: Throwable?)
     }
 }

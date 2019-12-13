@@ -1,7 +1,6 @@
 package com.iflytek.cyber.evs.demo
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.appcompat.app.AppCompatActivity
 import com.iflytek.cyber.evs.sdk.agent.impl.VideoPlayerInstance
 import kotlinx.android.synthetic.main.activity_videoplayer.*
@@ -18,7 +17,7 @@ class VideoActivity : AppCompatActivity() {
         playerInstance = VideoPlayerInstance(this,
             video_view as com.google.android.exoplayer2.ui.PlayerView)
 
-        btn_play.setOnClickListener {
+        btn_resume.setOnClickListener {
             playerInstance?.play(VIDEO_URL)
         }
 

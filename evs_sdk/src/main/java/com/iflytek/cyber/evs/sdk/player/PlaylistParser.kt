@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.iflytek.cyber.embeddedclient.player
+package com.iflytek.cyber.evs.sdk.player
 
 import android.net.Uri
+import android.os.Build
 import okhttp3.OkHttpClient
 import okhttp3.OkUrlFactory
 import java.io.BufferedReader
@@ -25,15 +26,28 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.SecureRandom
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
+import javax.net.ssl.SSLContext
 
 class PlaylistParser {
     private val mExecutor = Executors.newSingleThreadExecutor()
-    private val mOkHttpClient = Tls12SocketFactory.enableTls12OnPreLollipop(OkHttpClient.Builder()).build()
-    private val mOkHttpFactory = OkUrlFactory(mOkHttpClient)
+    //    private val mOkHttpClient = Tls12SocketFactory.enableTls12OnPreLollipop(OkHttpClient.Builder()).build()
+    private val mOkHttpClient: OkHttpClient
+    private val mOkHttpFactory: OkUrlFactory
 
+    init {
+        val clientBuilder = OkHttpClient.Builder()
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            val context = SSLContext.getInstance("TLSv1.2")
+            context.init(null, null, SecureRandom())
+            clientBuilder.sslSocketFactory(context.socketFactory)
+        }
+        mOkHttpClient = clientBuilder.build()
+        mOkHttpFactory = OkUrlFactory(mOkHttpClient)
+    }
     // Extracts Url from redirect Url. Note: not a complete playlist parser implementation
     @Throws(IOException::class)
     internal fun parseUri(uri: Uri): Uri {
