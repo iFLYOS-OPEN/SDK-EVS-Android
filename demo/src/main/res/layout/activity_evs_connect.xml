@@ -168,145 +168,231 @@
         android:layout_gravity="end"
         android:background="@android:color/white"
         android:clickable="true"
-        android:focusable="true"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp">
+        android:focusable="true">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
-
-            <TextView
-                style="@style/TextAppearance.AppCompat.Caption"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="播放控制" />
-
-            <com.google.android.flexbox.FlexboxLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                app:alignContent="stretch"
-                app:alignItems="stretch"
-                app:flexWrap="wrap">
-
-                <Button
-                    android:id="@+id/btn_previous"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="playback_controller.PREVIOUS"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black" />
-
-                <Button
-                    android:id="@+id/btn_resume"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="playback_controller.RESUME"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black" />
-
-                <Button
-                    android:id="@+id/btn_pause"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="playback_controller.PAUSE"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black" />
-
-                <Button
-                    android:id="@+id/btn_next"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="playback_controller.NEXT"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black" />
-
-                <Button
-                    android:id="@+id/btn_exit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="playback_controller.EXIT"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/black" />
-
-            </com.google.android.flexbox.FlexboxLayout>
-
-            <TextView
-                style="@style/TextAppearance.AppCompat.Caption"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="状态同步" />
-
-            <Button
-                android:id="@+id/send_state_sync"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="system.state_sync"
-                android:textAllCaps="false" />
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp">
 
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <CheckBox
-                    android:id="@+id/custom_context"
+                <TextView
+                    style="@style/TextAppearance.AppCompat.Caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="自定义 Context"
-                    android:textAllCaps="false" />
+                    android:text="播放控制" />
+
+                <com.google.android.flexbox.FlexboxLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    app:alignContent="stretch"
+                    app:alignItems="stretch"
+                    app:flexWrap="wrap">
+
+                    <Button
+                        android:id="@+id/btn_previous"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="playback_controller.PREVIOUS"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/black" />
+
+                    <Button
+                        android:id="@+id/btn_resume"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="playback_controller.RESUME"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/black" />
+
+                    <Button
+                        android:id="@+id/btn_pause"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="playback_controller.PAUSE"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/black" />
+
+                    <Button
+                        android:id="@+id/btn_next"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="playback_controller.NEXT"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/black" />
+
+                    <Button
+                        android:id="@+id/btn_exit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="playback_controller.EXIT"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/black" />
+
+                </com.google.android.flexbox.FlexboxLayout>
+
+                <TextView
+                    style="@style/TextAppearance.AppCompat.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="状态同步" />
 
                 <Button
-                    android:id="@+id/btn_custom_context"
+                    android:id="@+id/send_state_sync"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:enabled="false"
-                    android:text="编辑" />
+                    android:text="system.state_sync"
+                    android:textAllCaps="false" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <CheckBox
+                        android:id="@+id/custom_context"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="自定义 Context"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/btn_custom_context"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:enabled="false"
+                        android:text="编辑" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="识别" />
+
+                <RadioGroup
+                    android:id="@+id/profile_radio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radio_close_talk"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="近场" />
+
+                    <RadioButton
+                        android:id="@+id/radio_far_field"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="远场" />
+                </RadioGroup>
+
+                <CheckBox
+                    android:id="@+id/background_recognize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/background_recognize" />
+
+                <CheckBox
+                    android:id="@+id/disable_response_sound"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="禁止响应到达时播放提示音"
+                    android:textAllCaps="false" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="设备" />
+
+                <LinearLayout
+                    android:id="@+id/location_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:orientation="vertical">
+
+                    <CheckBox
+                        android:id="@+id/custom_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/custom_location" />
+
+                    <TextView
+                        android:id="@+id/current_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="当前自定义经纬度：无"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/longitude"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/longitude_hint"
+                            android:inputType="numberDecimal"
+                            android:textSize="12sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/latitude"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/latitude_hint"
+                            android:inputType="numberDecimal"
+                            android:textSize="12sp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="点击保存后生效"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+
+                        <Button
+                            android:id="@+id/apply_custom_location"
+                            style="@style/Widget.AppCompat.Button.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/save" />
+
+                        <Button
+                            android:id="@+id/clear_custom_location"
+                            style="@style/Widget.AppCompat.Button.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/clear" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="识别" />
-
-            <RadioGroup
-                android:id="@+id/profile_radio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <RadioButton
-                    android:id="@+id/radio_close_talk"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="近场" />
-
-                <RadioButton
-                    android:id="@+id/radio_far_field"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="远场" />
-            </RadioGroup>
-
-            <CheckBox
-                android:id="@+id/background_recognize"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/background_recognize" />
-
-            <CheckBox
-                android:id="@+id/disable_response_sound"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="禁止响应到达时播放提示音"
-                android:textAllCaps="false" />
-
-        </LinearLayout>
+        </ScrollView>
 
         <View
             android:id="@+id/disconnect_cover"

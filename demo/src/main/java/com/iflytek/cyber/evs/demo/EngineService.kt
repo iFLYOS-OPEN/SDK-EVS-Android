@@ -5,15 +5,14 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Binder
 import android.os.IBinder
-import android.provider.Settings
 import android.util.Log
-import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import com.iflytek.cyber.evs.demo.utils.DeviceUtils
 import com.iflytek.cyber.evs.sdk.EvsService
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
 import com.iflytek.cyber.evs.sdk.agent.Recognizer
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
+import com.iflytek.cyber.evs.sdk.model.DeviceLocation
 
 class EngineService : EvsService() {
     private val binder = EngineServiceBinder()
@@ -260,6 +259,18 @@ class EngineService : EvsService() {
     override fun isResponseSoundEnabled(): Boolean {
         return !PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(getString(R.string.key_disable_response_sound), false)
+    }
+
+    override fun getLocation(): DeviceLocation? {
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        if (pref.getBoolean(getString(R.string.key_custom_location), false)) {
+            val latitude = pref.getFloat(getString(R.string.key_latitude), Float.MIN_VALUE)
+            val longitude = pref.getFloat(getString(R.string.key_longitude), Float.MIN_VALUE)
+            if (latitude != Float.MIN_VALUE && longitude != Float.MIN_VALUE) {
+                return DeviceLocation(latitude.toDouble(), longitude.toDouble())
+            }
+        }
+        return super.getLocation()
     }
 
     interface TransmissionListener {

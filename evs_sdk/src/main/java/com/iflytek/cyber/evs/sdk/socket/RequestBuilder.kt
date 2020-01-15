@@ -3,8 +3,10 @@ package com.iflytek.cyber.evs.sdk.socket
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
+import com.iflytek.cyber.evs.sdk.EvsService
 import com.iflytek.cyber.evs.sdk.agent.*
 import com.iflytek.cyber.evs.sdk.model.*
+import java.lang.ref.SoftReference
 import java.util.*
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -32,6 +34,8 @@ internal object RequestBuilder {
     private var videoPlayer: VideoPlayer? = null
     private var wakeWord: WakeWord? = null
 
+    private var serviceRef: SoftReference<EvsService>? = null
+
     var customIflyosContext: String? = null
 
     fun init(
@@ -47,7 +51,8 @@ internal object RequestBuilder {
         system: System,
         template: Template?,
         videoPlayer: VideoPlayer?,
-        wakeWord: WakeWord?
+        wakeWord: WakeWord?,
+        service: EvsService
     ) {
         this.alarm = alarm
         this.appAction = appAction
@@ -62,6 +67,7 @@ internal object RequestBuilder {
         this.template = template
         this.videoPlayer = videoPlayer
         this.wakeWord = wakeWord
+        this.serviceRef = SoftReference(service)
     }
 
     fun setDeviceAuthInfo(deviceId: String, token: String) {
@@ -78,7 +84,7 @@ internal object RequestBuilder {
         val prefix = if (isManual) PREFIX_MANUAL else ""
         val requestHeader = RequestHeader(name, "$prefix$requestId")
 
-        val device = HeaderDevice(deviceId, null, DevicePlatform(), null)
+        val device = HeaderDevice(deviceId, serviceRef?.get()?.getLocation(), DevicePlatform(), null)
         val header = OsHeader("Bearer $token", device)
 
         val context = buildContext()

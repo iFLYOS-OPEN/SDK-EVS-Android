@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.content.*
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -12,9 +13,8 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.*
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
+import android.widget.AdapterView.OnItemSelectedListener
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -422,6 +422,85 @@ class EvsConnectActivity : AppCompatActivity() {
                 disable_response_sound.isChecked
             ).apply()
         }
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .getBoolean(getString(R.string.key_custom_location), false)
+            .let { isCustomLocationEnabled ->
+                custom_location.isChecked = isCustomLocationEnabled
+
+                location_container.setBackgroundColor(
+                    if (isCustomLocationEnabled) {
+                        Color.TRANSPARENT
+                    } else {
+                        Color.parseColor("#33000000")
+                    }
+                )
+
+                latitude.isEnabled = isCustomLocationEnabled
+                longitude.isEnabled = isCustomLocationEnabled
+                apply_custom_location.isEnabled = isCustomLocationEnabled
+            }
+        initCustomLocationValue()
+        custom_location.setOnCheckedChangeListener { _, isChecked ->
+            PreferenceManager.getDefaultSharedPreferences(this).edit()
+                .putBoolean(getString(R.string.key_custom_location), isChecked)
+                .apply()
+
+            location_container.setBackgroundColor(
+                if (isChecked) {
+                    Color.TRANSPARENT
+                } else {
+                    Color.parseColor("#33000000")
+                }
+            )
+
+            if (latitude.hasFocus()) {
+                latitude.clearFocus()
+            }
+
+            latitude.isEnabled = isChecked
+            longitude.isEnabled = isChecked
+            apply_custom_location.isEnabled = isChecked
+        }
+        apply_custom_location.setOnClickListener {
+            var setSucceed: Boolean
+            try {
+                setSucceed = if (latitude.text.isNullOrEmpty() || longitude.text.isNullOrEmpty()) {
+                    false
+                } else {
+                    val latitudeText = latitude.text.toString().toFloat()
+                    val longitudeText = longitude.text.toString().toFloat()
+
+                    if (latitudeText in -90f..90f && longitudeText in -180f..180f) {
+                        PreferenceManager.getDefaultSharedPreferences(this)
+                            .edit()
+                            .putFloat(getString(R.string.key_latitude), latitudeText)
+                            .putFloat(getString(R.string.key_longitude), longitudeText)
+                            .apply()
+
+                        true
+                    } else {
+                        false
+                    }
+                }
+            } catch (t: Throwable) {
+                setSucceed = false
+            }
+            if (!setSucceed) {
+                Toast.makeText(this, "经纬度格式不符合要求", Toast.LENGTH_SHORT).show()
+            } else {
+                initCustomLocationValue()
+            }
+        }
+        clear_custom_location.setOnClickListener {
+            PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .remove(getString(R.string.key_latitude))
+                .remove(getString(R.string.key_longitude))
+                .apply()
+
+            initCustomLocationValue()
+        }
     }
 
     override fun onBackPressed() {
@@ -452,6 +531,18 @@ class EvsConnectActivity : AppCompatActivity() {
             packageName
         )
         return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun initCustomLocationValue() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        val latitude = pref.getFloat(getString(R.string.key_latitude), Float.MIN_VALUE)
+        val longitude = pref.getFloat(getString(R.string.key_longitude), Float.MIN_VALUE)
+        if (latitude != Float.MIN_VALUE && longitude != Float.MIN_VALUE) {
+            current_location.text = "当前自定义经纬度: $longitude, $latitude"
+        } else {
+            current_location.text = "当前自定义经纬度: 无"
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -539,6 +630,75 @@ class EvsConnectActivity : AppCompatActivity() {
                     )
                 }
                 builder.setMessage(message)
+                    .show()
+            }
+            R.id.mi_start_evaluating -> {
+                if (engineService?.isEvsConnected != true) {
+                    Snackbar.make(container, "请先连接 EVS", Snackbar.LENGTH_SHORT).show()
+                    return true
+                }
+
+                val view = View.inflate(this, R.layout.layout_evaluate_info, null)
+                val spinnerLanguage = view.findViewById<Spinner>(R.id.spinner_language)
+                val languageValues = arrayOf(
+                    Recognizer.LANGUAGE_EN_US, Recognizer.LANGUAGE_ZH_CN
+                )
+                spinnerLanguage.adapter = ArrayAdapter<String>(
+                    this, android.R.layout.simple_list_item_1, android.R.id.text1, languageValues
+                )
+                val spinnerCategory = view.findViewById<Spinner>(R.id.spinner_category)
+                val categoryValues = arrayOf(
+                    Recognizer.EVALUATE_CATEGORY_READ_CHAPTER,
+                    Recognizer.EVALUATE_CATEGORY_READ_SENTENCE,
+                    Recognizer.EVALUATE_CATEGORY_READ_WORD,
+                    Recognizer.EVALUATE_CATEGORY_READ_SYLLABLE
+                )
+                val categories = arrayOf(
+                    "篇章朗读 - 仅英文可用",
+                    "句子朗读 - 中英文可用",
+                    "词语朗读 - 中英文可用",
+                    "单字朗读 - 仅中文可用"
+                )
+                spinnerCategory.adapter = ArrayAdapter<String>(
+                    this, android.R.layout.simple_list_item_1, android.R.id.text1, categories
+                )
+                spinnerCategory.onItemSelectedListener = object : OnItemSelectedListener {
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+
+                    }
+
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                        val categoryValue = categoryValues[position]
+                        if (categoryValue == Recognizer.EVALUATE_CATEGORY_READ_CHAPTER) {
+                            spinnerLanguage.isEnabled = false
+                            spinnerLanguage.setSelection(0)
+                        } else if (categoryValue == Recognizer.EVALUATE_CATEGORY_READ_SYLLABLE) {
+                            spinnerLanguage.isEnabled = false
+                            spinnerLanguage.setSelection(1)
+                        } else {
+                            if (!spinnerLanguage.isEnabled) {
+                                spinnerLanguage.isEnabled = true
+                            }
+                        }
+                    }
+                }
+                val etText = view.findViewById<EditText>(R.id.et_text)
+
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.start_evaluating)
+                    .setView(view)
+                    .setPositiveButton(android.R.string.yes) { _, _ ->
+                        val language = languageValues[spinnerLanguage.selectedItemPosition]
+                        val category = categoryValues[spinnerCategory.selectedItemPosition]
+                        val text = etText.text.toString()
+                        engineService?.getRecognizer()?.sendEvaluate(language, category, text)
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
                     .show()
             }
         }

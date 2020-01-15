@@ -78,10 +78,12 @@ abstract class EvsService : Service() {
         }
 
         override fun onDisconnected(code: Int, reason: String?, remote: Boolean) {
-            isEvsConnected = false
-            recognizer.stopCapture()
+            if (isEvsConnected) {
+                isEvsConnected = false
+                recognizer.stopCapture()
 
-            onEvsDisconnected(code, reason, remote)
+                onEvsDisconnected(code, reason, remote)
+            }
         }
 
         override fun onMessage(message: String) {
@@ -308,7 +310,12 @@ abstract class EvsService : Service() {
 
     }
 
+    @Deprecated("")
     open fun onSendFailed(code: Int, reason: String?) {
+
+    }
+
+    open fun onSendFailed(code: Int, reason: String?, sendFailedMessage: Any) {
 
     }
 
@@ -359,7 +366,8 @@ abstract class EvsService : Service() {
             system,
             template,
             videoPlayer,
-            wakeWord
+            wakeWord,
+            this
         )
 
         ResponseProcessor.initHandler(handler)
@@ -795,6 +803,10 @@ abstract class EvsService : Service() {
                 1f
             )
         }
+    }
+
+    open fun getLocation(): DeviceLocation? {
+        return null
     }
 
     /**

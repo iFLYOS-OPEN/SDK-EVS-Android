@@ -40,10 +40,20 @@
     <string name="key_background_recognize">background_recognize</string>
     <string name="key_recognize_profile">recognize_profile</string>
     <string name="key_disable_response_sound">disable_response_sound</string>
+    <string name="key_custom_location">custom_location</string>
+    <string name="key_latitude">latitude</string>
+    <string name="key_longitude">longitude</string>
     <string name="background_recognize">背景录音</string>
     <string name="cancel">取消</string>
     <string name="scan_qrcode">扫描二维码</string>
     <string name="copy_access_token">复制 access token</string>
+    <string name="custom_location">自定义经纬度</string>
+    <string name="latitude">纬度</string>
+    <string name="longitude">经度</string>
+    <string name="latitude_hint">纬度（-90到90）</string>
+    <string name="longitude_hint">经度（-180到180）</string>
+    <string name="clear">清除</string>
+    <string name="start_evaluating">开始语音评测</string>
 
     <string-array name="codec_formats">
         <item>RAW</item>

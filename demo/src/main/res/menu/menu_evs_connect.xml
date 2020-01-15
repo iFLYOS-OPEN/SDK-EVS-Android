@@ -9,6 +9,9 @@
     <item
         android:id="@+id/mi_current_auth_info"
         android:title="@string/current_auth_info" />
+    <item
+        android:id="@+id/mi_start_evaluating"
+        android:title="@string/start_evaluating" />
     <!--<item-->
     <!--android:id="@+id/mi_settings"-->
     <!--android:title="设置" />-->

@@ -47,6 +47,7 @@ abstract class Template {
         const val KEY_FOCUSED = "focused"
         const val KEY_TEMPLATE_TYPE = "template_type"
         const val KEY_SHOULD_POPUP = "should_popup"
+        const val KEY_HTML_SOURCE_CODE = "html_source_code"
     }
 
     open fun isFocused(): Boolean {
@@ -60,7 +61,18 @@ abstract class Template {
     /**
      * 请求渲染自定义模板
      */
+    @Deprecated(
+        replaceWith = ReplaceWith("renderCustomTemplate(type, templateId, htmlSourceCode)"),
+        message = "Deprecated. Use renderCustomTemplate(type, templateId, htmlSourceCode) please."
+    )
     open fun renderCustomTemplate(payload: String) {
+        VisualFocusManager.requestActive(
+            VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE, VisualFocusManager.TYPE_STATIC_TEMPLATE
+        )
+    }
+
+
+    open fun renderCustomTemplate(type: String, templateId: String, htmlSourceCode: String) {
         VisualFocusManager.requestActive(
             VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE, VisualFocusManager.TYPE_STATIC_TEMPLATE
         )
