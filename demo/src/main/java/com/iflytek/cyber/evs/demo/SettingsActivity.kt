@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.PermissionChecker
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.textfield.TextInputLayout
 import com.iflytek.cyber.evs.demo.utils.DeviceUtils
@@ -44,8 +45,8 @@ class SettingsActivity : AppCompatActivity() {
             .commit()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
             android.R.id.home -> {
                 onBackPressed()
                 return true
@@ -74,8 +75,8 @@ class SettingsActivity : AppCompatActivity() {
                     true
                 }
             }
-            findPreference(getString(R.string.key_client_id))?.let {
-                it.summary = it.sharedPreferences.getString(
+            (findPreference<Preference>(getString(R.string.key_client_id)))?.let {
+                it.summary = it.sharedPreferences?.getString(
                     getString(R.string.key_client_id),
                     getString(R.string.default_client_id)
                 )
@@ -118,7 +119,9 @@ class SettingsActivity : AppCompatActivity() {
                         }
                     }
                     editText.setText(pre.summary)
-                    editText.setSelection(pre.summary.length)
+                    pre.summary?.length?.let { length ->
+                        editText.setSelection(length)
+                    }
                     editText.post {
                         editText.requestFocus()
                     }
@@ -127,8 +130,8 @@ class SettingsActivity : AppCompatActivity() {
                         .setTitle(R.string.title_client_id)
                         .setPositiveButton(android.R.string.yes) { _, _ ->
                             val text = editText.text.toString()
-                            pre.sharedPreferences.edit()
-                                .putString(getString(R.string.key_client_id), text).apply()
+                            pre.sharedPreferences?.edit()
+                                ?.putString(getString(R.string.key_client_id), text)?.apply()
                             pre.summary = text
                         }
                         .setNegativeButton(android.R.string.cancel, null)
@@ -138,11 +141,11 @@ class SettingsActivity : AppCompatActivity() {
                             context?.startService(clearAuth)
 
                             val defaultClientId = getString(R.string.default_client_id)
-                            pre.sharedPreferences.edit()
-                                .putString(
+                            pre.sharedPreferences?.edit()
+                                ?.putString(
                                     getString(R.string.key_client_id),
                                     defaultClientId
-                                ).apply()
+                                )?.apply()
                             pre.summary = defaultClientId
                         }
                         .setOnDismissListener {
@@ -165,7 +168,7 @@ class SettingsActivity : AppCompatActivity() {
                     true
                 }
             }
-            findPreference(getString(R.string.key_reset))?.let {
+            findPreference<Preference>(getString(R.string.key_reset))?.let {
                 it.setOnPreferenceClickListener { _ ->
                     AlertDialog.Builder(it.context)
                         .setTitle(R.string.reset)

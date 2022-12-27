@@ -5,14 +5,16 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.activity_edit_custom_context.*
+import com.iflytek.cyber.evs.demo.databinding.ActivityEditCustomContextBinding
 
 class EditCustomContextActivity : AppCompatActivity() {
     private var defaultContext: String? = null
+    private lateinit var binding: ActivityEditCustomContextBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_edit_custom_context)
+        binding = ActivityEditCustomContextBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         defaultContext = intent.getStringExtra("default_context")
 
@@ -26,7 +28,7 @@ class EditCustomContextActivity : AppCompatActivity() {
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         val customContext = pref.getString("custom_context", defaultContext)
 
-        edit_text.setText(customContext)
+        binding.editText.setText(customContext)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -34,17 +36,17 @@ class EditCustomContextActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
             R.id.save_and_quit -> {
-                val context = edit_text.text.toString()
+                val context = binding.editText.text.toString()
                 val pref = PreferenceManager.getDefaultSharedPreferences(this)
                 pref.edit().putString("custom_context", context).apply()
 
                 finish()
             }
             R.id.fill_current_context -> {
-                edit_text.setText(defaultContext)
+                binding.editText.setText(defaultContext)
             }
             android.R.id.home -> {
                 onBackPressed()

@@ -23,20 +23,24 @@ import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.iflytek.cyber.evs.demo.utils.DeviceUtils
 import com.iflytek.cyber.evs.demo.utils.PrefUtil
+import com.iflytek.cyber.evs.demo.databinding.ActivityAuthBinding
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.evs.sdk.model.AuthResponse
 import com.iflytek.cyber.evs.sdk.model.DeviceCodeResponse
-import kotlinx.android.synthetic.main.activity_auth.*
 import org.json.JSONObject
 import java.util.*
 
 
 class AuthActivity : AppCompatActivity() {
     private var authUrl: String? = null
+    private lateinit var binding: ActivityAuthBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_auth)
+        binding = ActivityAuthBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         supportActionBar?.run {
             setHomeButtonEnabled(true)
@@ -56,22 +60,22 @@ class AuthActivity : AppCompatActivity() {
 
         AuthDelegate.setAuthUrl(authBaseUrl)
 
-        auth_summary.text = getString(R.string.auth_summary, clientId, deviceId)
+        binding.authSummary.text = getString(R.string.auth_summary, clientId, deviceId)
 
-        scope_data.setText(AuthDelegate.SCOPE_DATA_DEFAULT)
+        binding.scopeData.setText(AuthDelegate.SCOPE_DATA_DEFAULT)
 
-        custom_scope_data.setOnCheckedChangeListener { _, isChecked ->
-            scope_data.isEnabled = isChecked
+        binding.customScopeData.setOnCheckedChangeListener { _, isChecked ->
+            binding.scopeData.isEnabled = isChecked
         }
 
         if (AuthDelegate.getAuthResponseFromPref(this) == null) {
             PrefUtil.setToPref(this, "auth_params", null)
         }
 
-        request.setOnClickListener {
+        binding.request.setOnClickListener {
             val customScopeData =
-                if (custom_scope_data.isChecked)
-                    scope_data.text.toString()
+                if (binding.customScopeData.isChecked)
+                    binding.scopeData.text.toString()
                 else
                     AuthDelegate.SCOPE_DATA_DEFAULT
 
@@ -84,7 +88,7 @@ class AuthActivity : AppCompatActivity() {
             val requestBody =
                 "client_id=$clientId&scope=$customScopeData&scope_data=$scopeData"
 
-            request_params.text = getString(R.string.request_params_summary, requestBody)
+            binding.requestParams.text = getString(R.string.request_params_summary, requestBody)
             // endif
 
             AuthDelegate.requestDeviceCode(
@@ -94,16 +98,20 @@ class AuthActivity : AppCompatActivity() {
                 object : AuthDelegate.ResponseCallback<DeviceCodeResponse> {
                     override fun onResponse(response: DeviceCodeResponse) {
                         runOnUiThread {
-                            tv_response.visibility = View.VISIBLE
-                            tv_response.text = response.toString()
-                            qr_code.visibility = View.VISIBLE
+                            binding.tvResponse.visibility = View.VISIBLE
+                            binding.tvResponse.text = response.toString()
+                            binding.qrCode.visibility = View.VISIBLE
                         }
 
                         authUrl = "${response.verificationUri}?user_code=${response.userCode}"
-                        createQRBitmap(authUrl!!, qr_code.width, qr_code.height)?.let { bitmap ->
+                        createQRBitmap(
+                            authUrl!!,
+                            binding.qrCode.width,
+                            binding.qrCode.height
+                        )?.let { bitmap ->
                             runOnUiThread {
-                                qr_code.setImageBitmap(bitmap)
-                                open_browser.visibility = View.VISIBLE
+                                binding.qrCode.setImageBitmap(bitmap)
+                                binding.openBrowser.visibility = View.VISIBLE
                             }
                         }
                     }
@@ -115,14 +123,14 @@ class AuthActivity : AppCompatActivity() {
                         throwable: Throwable?
                     ) {
                         runOnUiThread {
-                            tv_response.visibility = View.VISIBLE
-                            qr_code.visibility = View.INVISIBLE
-                            open_browser.visibility = View.INVISIBLE
+                            binding.tvResponse.visibility = View.VISIBLE
+                            binding.qrCode.visibility = View.INVISIBLE
+                            binding.openBrowser.visibility = View.INVISIBLE
 
                             throwable?.let {
-                                tv_response.text = "$it\n${it.message}"
+                                binding.tvResponse.text = "$it\n${it.message}"
                             } ?: run {
-                                tv_response.text = "code: $httpCode\n body: $errorBody"
+                                binding.tvResponse.text = "code: $httpCode\n body: $errorBody"
                             }
                         }
                     }
@@ -157,7 +165,7 @@ class AuthActivity : AppCompatActivity() {
                 customScopeData
             )
         }
-        open_browser.setOnClickListener {
+        binding.openBrowser.setOnClickListener {
             authUrl?.let { url ->
                 val uri = Uri.parse(url)
                 val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -223,8 +231,12 @@ class AuthActivity : AppCompatActivity() {
             } else {
                 builder.setNegativeButton(R.string.copy_access_token) { _, _ ->
                     val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    cm.primaryClip =
-                        ClipData.newPlainText(response.accessToken, response.accessToken)
+                    cm.setPrimaryClip(
+                        ClipData.newPlainText(
+                            response.accessToken,
+                            response.accessToken
+                        )
+                    )
                 }
                 getString(
                     R.string.auth_params_summary,

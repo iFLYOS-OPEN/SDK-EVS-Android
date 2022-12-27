@@ -6,29 +6,31 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
+import com.iflytek.cyber.evs.demo.databinding.ActivityMainBinding
 import com.iflytek.cyber.evs.demo.utils.DeviceUtils
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        auth_item.setOnClickListener {
+        binding.authItem.setOnClickListener {
             startActivity(Intent(this, AuthActivity::class.java))
         }
-        evs_connect_item.setOnClickListener {
+        binding.evsConnectItem.setOnClickListener {
             startActivity(Intent(this, EvsConnectActivity::class.java))
         }
-        evs_settings_item.setOnClickListener {
+        binding.evsSettingsItem.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        evs_video_item.setOnClickListener {
+        binding.evsVideoItem.setOnClickListener {
             startActivity(Intent(this, VideoActivity::class.java))
         }
-        evs_video_item.visibility = View.INVISIBLE
+        binding.evsVideoItem.visibility = View.INVISIBLE
     }
 
     @SuppressLint("SetTextI18n")
@@ -45,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         val authUrl =
             pref.getString(getString(R.string.key_auth_url), getString(R.string.default_auth_url))
 
-        current_config.text = """
+        binding.currentConfig.text = """
             当前配置
             client id: $clientId
             设备 ID: $deviceId

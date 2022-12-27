@@ -11,7 +11,7 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
 
 class VideoPlayerInstance {
-    private lateinit var player: SimpleExoPlayer
+    private lateinit var player: ExoPlayer
 
     private val mediaSourceFactory: MediaSourceFactory
 
@@ -26,7 +26,7 @@ class VideoPlayerInstance {
 
     constructor(context: Context) {
         createPlayer(context)
-        player.addListener(object : Player.EventListener {
+        player.addListener(object : Player.Listener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 listener?.onPlayerStateChanged(
                     this@VideoPlayerInstance,
@@ -35,7 +35,8 @@ class VideoPlayerInstance {
                 )
             }
 
-            override fun onPlayerError(error: ExoPlaybackException?) {
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
                 listener?.onPlayerError(this@VideoPlayerInstance, error)
             }
         })
@@ -45,7 +46,7 @@ class VideoPlayerInstance {
 
     constructor(context: Context, playerView: PlayerView) {
         createPlayer(context)
-        player.addListener(object : Player.EventListener {
+        player.addListener(object : Player.Listener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 listener?.onPlayerStateChanged(
                     this@VideoPlayerInstance,
@@ -54,7 +55,8 @@ class VideoPlayerInstance {
                 )
             }
 
-            override fun onPlayerError(error: ExoPlaybackException?) {
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
                 listener?.onPlayerError(this@VideoPlayerInstance, error)
             }
         })
@@ -65,12 +67,7 @@ class VideoPlayerInstance {
     }
 
     private fun createPlayer(context: Context) {
-        player = ExoPlayerFactory.newSimpleInstance(
-            context,
-            DefaultRenderersFactory(context),
-            DefaultTrackSelector(),
-            DefaultLoadControl()
-        )
+        player = ExoPlayer.Builder(context).build()
     }
 
     private val positionUpdateRunnable = object : Runnable {
@@ -94,7 +91,7 @@ class VideoPlayerInstance {
             playbackState: Int
         )
 
-        fun onPlayerError(player: VideoPlayerInstance, error: ExoPlaybackException?)
+        fun onPlayerError(player: VideoPlayerInstance, error: PlaybackException)
         fun onPlayerPositionUpdated(player: VideoPlayerInstance, position: Long)
     }
 

@@ -5,6 +5,7 @@ import android.os.Handler
 import android.util.Log
 import android.view.SurfaceView
 import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerView
 import com.iflytek.cyber.evs.sdk.agent.VideoPlayer
@@ -91,29 +92,33 @@ class VideoPlayerImpl : VideoPlayer {
             onPositionUpdated(player.resourceId ?: "", position)
         }
 
-        override fun onPlayerError(player: VideoPlayerInstance, error: ExoPlaybackException?) {
-            val errorCode: String = when (error?.type) {
-                ExoPlaybackException.TYPE_UNEXPECTED -> {
-                    MEDIA_ERROR_UNKNOWN
-                }
-                ExoPlaybackException.TYPE_SOURCE -> {
-                    MEDIA_ERROR_INVALID_REQUEST
-                }
-                ExoPlaybackException.TYPE_REMOTE -> {
-                    MEDIA_ERROR_SERVICE_UNAVAILABLE
-                }
-                ExoPlaybackException.TYPE_RENDERER -> {
-                    MEDIA_ERROR_INTERNAL_SERVER_ERROR
-                }
-                ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
-                    MEDIA_ERROR_INTERNAL_DEVICE_ERROR
-                }
-                else -> {
-                    MEDIA_ERROR_UNKNOWN
-                }
-            }
-            onError(player.resourceId ?: "", errorCode)
+        override fun onPlayerError(player: VideoPlayerInstance, error: PlaybackException) {
+            TODO("Not yet implemented")
         }
+
+//        override fun onPlayerError(player: VideoPlayerInstance, error: ExoPlaybackException?) {
+//            val errorCode: String = when (error?.type) {
+//                ExoPlaybackException.TYPE_UNEXPECTED -> {
+//                    MEDIA_ERROR_UNKNOWN
+//                }
+//                ExoPlaybackException.TYPE_SOURCE -> {
+//                    MEDIA_ERROR_INVALID_REQUEST
+//                }
+//                ExoPlaybackException.TYPE_REMOTE -> {
+//                    MEDIA_ERROR_SERVICE_UNAVAILABLE
+//                }
+//                ExoPlaybackException.TYPE_RENDERER -> {
+//                    MEDIA_ERROR_INTERNAL_SERVER_ERROR
+//                }
+////                ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
+////                    MEDIA_ERROR_INTERNAL_DEVICE_ERROR
+////                }
+//                else -> {
+//                    MEDIA_ERROR_UNKNOWN
+//                }
+//            }
+//            onError(player.resourceId ?: "", errorCode)
+//        }
     }
 
     private fun initPlayer(context: Context, playerView: PlayerView) {

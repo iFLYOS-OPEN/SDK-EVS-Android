@@ -226,9 +226,9 @@ abstract class System {
             time = newTime
         }
 
-        override fun handleMessage(msg: Message?) {
+        override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
-            when (msg?.what) {
+            when (msg.what) {
                 1 -> {
                     val msgTime = msg.obj as? Long
                     if (msgTime == time) {

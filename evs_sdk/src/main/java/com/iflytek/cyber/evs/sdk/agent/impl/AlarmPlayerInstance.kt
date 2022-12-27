@@ -3,34 +3,32 @@ package com.iflytek.cyber.evs.sdk.agent.impl
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.PlaybackException
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
 import com.iflytek.cyber.evs.sdk.utils.Log
 
 class AlarmPlayerInstance(context: Context) {
 
-    private val player = ExoPlayerFactory.newSimpleInstance(
-        context,
-        DefaultRenderersFactory(context),
-        DefaultTrackSelector(),
-        DefaultLoadControl()
-    )
+    private val audioAttributes = AudioAttributes.Builder()
+        .setContentType(C.AUDIO_CONTENT_TYPE_SONIFICATION)
+        .setUsage(C.USAGE_ALARM)
+        .build()
+    private val player = ExoPlayer.Builder(context)
+        .build()
     private val mMediaSourceFactory: MediaSourceFactory
 
     private val type = "Alarm"
-    private val audioAttributes = AudioAttributes.Builder()
-        .setContentType(C.CONTENT_TYPE_SONIFICATION)
-        .setUsage(C.USAGE_ALARM)
-        .build()
 
     private var listener: OnAlarmStateChangeListener? = null
 
     private var onStartSent = false
 
     init {
-        player.addListener(object : Player.EventListener {
+        player.addListener(object : Player.Listener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 Log.d(type, "onPlayerStateChanged($playWhenReady, $playbackState)")
                 when (playbackState) {
@@ -55,13 +53,14 @@ class AlarmPlayerInstance(context: Context) {
                 }
             }
 
-            override fun onPlayerError(error: ExoPlaybackException?) {
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
                 playLocalAlarm()
             }
         })
         mMediaSourceFactory = MediaSourceFactory(context, type)
-        player.audioAttributes = audioAttributes
         player.playWhenReady = false
+        player.setAudioAttributes(audioAttributes, false)
     }
 
     fun setOnAlarmStateChangeListener(listener: OnAlarmStateChangeListener) {

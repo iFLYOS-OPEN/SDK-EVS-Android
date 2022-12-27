@@ -374,7 +374,7 @@ abstract class EvsService : Service() {
 
         handlerThread = HandlerThread("request-handler")
         handlerThread?.start()
-        requestHandler = Handler(handlerThread?.looper)
+        requestHandler = Handler(handlerThread?.looper!!)
         requestHandler?.post {
             AppUtil.getForegroundApp(this@EvsService)
         }

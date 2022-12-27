@@ -36,8 +36,8 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 "$packageName&$ACTION_ALARM_ARRIVED" -> {
-                    val alarmId = intent.getStringExtra(KEY_ALARM_ID)
-                    val url = intent.getStringExtra(KEY_URL)
+                    val alarmId = intent.getStringExtra(KEY_ALARM_ID) ?: return
+                    val url = intent.getStringExtra(KEY_URL) ?: return
                     val timestamp = intent.getLongExtra(KEY_TIMESTAMP, -1L)
 
                     Log.d(TAG, "alarm arrived, {alarm_id=$alarmId, url=$url}.")
@@ -55,7 +55,7 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
 
                     dataHelper.deleteAlarm(alarmId)
 
-                    onAlarmUpdatedListener?.onAlarmUpdated()
+                    onAlarmUpdatedListener.onAlarmUpdated()
                 }
             }
         }

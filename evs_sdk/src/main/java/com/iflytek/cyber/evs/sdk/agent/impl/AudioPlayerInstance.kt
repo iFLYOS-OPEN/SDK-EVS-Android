@@ -7,10 +7,8 @@ import android.os.Handler
 import android.os.Looper
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
-import com.iflytek.cyber.evs.sdk.utils.Log
+import com.iflytek.cyber.evs.sdk.player.MediaSourceFactory
 
 internal class AudioPlayerInstance(context: Context, private val type: String) {
     companion object {
@@ -19,40 +17,20 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         const val TYPE_RING = AudioPlayer.TYPE_RING
     }
 
-    private val player = ExoPlayerFactory.newSimpleInstance(
-        context,
-        DefaultRenderersFactory(context),
-        DefaultTrackSelector(),
-        DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                5000,
-                DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
-                100,
-                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
-            )
-            .createDefaultLoadControl()
-    )
-    private val mMediaSourceFactory: MediaSourceFactory
-
     private val streamType = when (type) {
         TYPE_TTS, TYPE_PLAYBACK -> AudioManager.STREAM_MUSIC
         TYPE_RING -> AudioManager.STREAM_ALARM
         else -> AudioManager.STREAM_MUSIC
     }
-    private val period = Timeline.Period()
-
-    var resourceId: String? = null
-    var isStarted: Boolean = false
-
     private val audioAttributes = AudioAttributes.Builder()
         .setContentType(
             when (streamType) {
                 AudioManager.STREAM_ALARM ->
-                    C.CONTENT_TYPE_SONIFICATION
+                    C.AUDIO_CONTENT_TYPE_SONIFICATION
                 AudioManager.STREAM_MUSIC ->
-                    C.CONTENT_TYPE_MUSIC
+                    C.AUDIO_CONTENT_TYPE_MUSIC
                 else ->
-                    C.CONTENT_TYPE_MUSIC
+                    C.AUDIO_CONTENT_TYPE_MUSIC
             }
         )
         .setUsage(
@@ -66,12 +44,31 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
             }
         )
         .build()
-    private var listener: Listener? = null
+    private val player = ExoPlayer.Builder(context)
+//        .setAudioAttributes(audioAttributes, false)
+        .setLoadControl(
+            DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                    5000,
+                    DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
+                    100,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+                ).build()
+        ).build()
+    private val mMediaSourceFactory: MediaSourceFactory
+
+    private val period = Timeline.Period()
+
+    var resourceId: String? = null
+    var isStarted: Boolean = false
+
+    var listener: Listener? = null
+        private set
 
     private val handler = Handler()
 
     init {
-        player.addListener(object : Player.EventListener {
+        player.addListener(object : Player.Listener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 listener?.onPlayerStateChanged(
                     this@AudioPlayerInstance,
@@ -81,13 +78,19 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
                 )
             }
 
-            override fun onPlayerError(error: ExoPlaybackException?) {
-                listener?.onPlayerError(this@AudioPlayerInstance, type, error)
+            override fun onPlayerError(error: PlaybackException) {
+                super.onPlayerError(error)
+                listener?.onPlayerError(
+                    this@AudioPlayerInstance,
+                    type,
+                    error
+                )
             }
+
         })
         mMediaSourceFactory = MediaSourceFactory(context, type)
-        player.audioAttributes = audioAttributes
         player.playWhenReady = false
+        player.setAudioAttributes(audioAttributes, false)
     }
 
     private val positionUpdateRunnable = object : Runnable {
@@ -112,16 +115,12 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
             playbackState: Int
         )
 
-        fun onPlayerError(player: AudioPlayerInstance, type: String, error: ExoPlaybackException?)
+        fun onPlayerError(player: AudioPlayerInstance, type: String, error: PlaybackException)
         fun onPlayerPositionUpdated(player: AudioPlayerInstance, type: String, position: Long)
     }
 
     fun setListener(listener: Listener) {
         this.listener = listener
-    }
-
-    fun getListener(): Listener? {
-        return this.listener
     }
 
     fun play(url: String) {

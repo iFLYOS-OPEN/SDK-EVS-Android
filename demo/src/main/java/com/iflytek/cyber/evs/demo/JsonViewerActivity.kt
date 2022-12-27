@@ -3,13 +3,15 @@ package com.iflytek.cyber.evs.demo
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_json_viewer.*
+import com.iflytek.cyber.evs.demo.databinding.ActivityJsonViewerBinding
 import org.json.JSONObject
 
 class JsonViewerActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityJsonViewerBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_json_viewer)
+        binding = ActivityJsonViewerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         supportActionBar?.run {
             setHomeButtonEnabled(true)
@@ -18,16 +20,16 @@ class JsonViewerActivity : AppCompatActivity() {
 
         val text = intent.getStringExtra("json")
         try {
-            json.text = JSONObject(text).toString(2)
-            json.setTextIsSelectable(true)
+            binding.json.text = JSONObject(text).toString(2)
+            binding.json.setTextIsSelectable(true)
         } catch (e: Exception) {
-            json.text = text
+            binding.json.text = text
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        if (item?.itemId == android.R.id.home)
-            onBackPressed()
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home)
+            onBackPressedDispatcher.onBackPressed()
         return super.onOptionsItemSelected(item)
     }
 }

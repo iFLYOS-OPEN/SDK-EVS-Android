@@ -6,14 +6,21 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Size
 import android.view.MenuItem
 import android.view.TextureView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
+import androidx.camera.core.impl.ImageAnalysisConfig
+import androidx.camera.core.impl.PreviewConfig
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
-import kotlinx.android.synthetic.main.activity_scan_qrcode.*
+import com.iflytek.cyber.evs.demo.databinding.ActivityScanQrcodeBinding
 import java.util.concurrent.Executor
 
 class ScanQRCodeActivity : AppCompatActivity() {
@@ -25,29 +32,28 @@ class ScanQRCodeActivity : AppCompatActivity() {
     }
 
     private var getResult = false
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+    private lateinit var binding: ActivityScanQrcodeBinding
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private fun bindPreview(cameraProvider: ProcessCameraProvider) {
+        var preview: Preview = Preview.Builder()
+            .build()
 
-        setContentView(R.layout.activity_scan_qrcode)
+        var cameraSelector: CameraSelector = CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .build()
 
-        supportActionBar?.apply {
-            setHomeButtonEnabled(true)
-            setDisplayHomeAsUpEnabled(true)
-        }
+        preview.setSurfaceProvider(binding.previewView.surfaceProvider)
+
+        binding.previewView.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
 
         try {
-            val textureView: TextureView = findViewById(R.id.texture_view)
-            val previewConfig = PreviewConfig.Builder().apply {
-                setTargetAspectRatio(AspectRatio.RATIO_4_3)
-            }.build()
-            val analysisConfig = ImageAnalysisConfig.Builder().apply {
-                setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-            }.build()
-
-            val preview = AutoFitPreviewBuilder.build(previewConfig, textureView)
-            val analysis = ImageAnalysis(analysisConfig)
-
+            val analysis = ImageAnalysis.Builder()
+                // enable the following line if RGBA output is needed.
+                // .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                .setTargetResolution(Size(1280, 720))
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
             val analyzerThread = HandlerThread("BarcodeAnalyzer").apply { start() }
             val analyzerHandler = Handler(analyzerThread.looper)
             analysis.setAnalyzer(Executor {
@@ -63,11 +69,34 @@ class ScanQRCodeActivity : AppCompatActivity() {
                     finish()
                 }
             })
-
-            CameraX.bindToLifecycle(this, preview, analysis)
+            var camera = cameraProvider.bindToLifecycle(
+                this as LifecycleOwner,
+                cameraSelector,
+                analysis,
+                preview
+            )
         } catch (t: Throwable) {
             t.printStackTrace()
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        binding = ActivityScanQrcodeBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener(Runnable {
+            val cameraProvider = cameraProviderFuture.get()
+            bindPreview(cameraProvider)
+        }, ContextCompat.getMainExecutor(this))
+
+        supportActionBar?.apply {
+            setHomeButtonEnabled(true)
+            setDisplayHomeAsUpEnabled(true)
+        }
+
 
         setResult(RESULT_CANCEL)
     }
@@ -77,8 +106,8 @@ class ScanQRCodeActivity : AppCompatActivity() {
 
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        if (item?.itemId == android.R.id.home) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
             onBackPressed()
         }
         return super.onOptionsItemSelected(item)
@@ -96,7 +125,7 @@ class ScanQRCodeActivity : AppCompatActivity() {
             reader.setHints(map)
         }
 
-        override fun analyze(image: ImageProxy, rotationDegrees: Int) {
+        override fun analyze(image: ImageProxy) {
             if (ImageFormat.YUV_420_888 != image.format) {
                 Log.e("BarcodeAnalyzer", "expect YUV_420_888, now = ${image.format}")
                 return

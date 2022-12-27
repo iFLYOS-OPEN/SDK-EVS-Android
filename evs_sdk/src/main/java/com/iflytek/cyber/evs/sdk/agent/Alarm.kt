@@ -39,15 +39,15 @@ abstract class Alarm {
                 }
 
                 override fun setAlarm(alarm: Item) {
-
+                    super.setAlarm(alarm)
                 }
 
                 override fun deleteAlarm(alarmId: String) {
-
+                    super.deleteAlarm(alarmId)
                 }
 
                 override fun stop() {
-
+                    super.stop()
                 }
 
                 override fun destroy() {
@@ -65,7 +65,7 @@ abstract class Alarm {
 
     private var alarmUpdateListeners = HashSet<OnAlarmUpdatedListener>()
 
-    internal var onAlarmUpdatedListener = object : OnAlarmUpdatedListener {
+    internal val onAlarmUpdatedListener = object : OnAlarmUpdatedListener {
         override fun onAlarmUpdated() {
             alarmUpdateListeners.map {
                 try {

@@ -1,15 +1,15 @@
-apply plugin: 'com.android.application'
-
-apply plugin: 'kotlin-android'
-
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-parcelize'
+}
 
 android {
-    compileSdkVersion 28
+    compileSdk 33
     defaultConfig {
         applicationId "com.iflytek.cyber.evs.demo"
-        minSdkVersion 21
-        targetSdkVersion 28
+        minSdk 21
+        targetSdk 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -26,26 +26,40 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures {
+        viewBinding true
+    }
+    namespace 'com.iflytek.cyber.evs.demo'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(path: ':evs_sdk')
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'androidx.core:core-ktx:1.0.2'
-    implementation 'com.google.android:flexbox:1.1.1'
-    implementation 'com.android.support:multidex:1.0.3'
-    implementation 'com.android.support:preference-v7:28.0.0'
-    implementation "com.google.android.material:material:1.1.0-alpha09"
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'com.google.android.flexbox:flexbox:3.0.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.preference:preference-ktx:1.2.0'
+    implementation "com.google.android.material:material:1.8.0-beta01"
     implementation "com.google.zxing:core:3.4.0"
-    implementation 'androidx.camera:camera-core:1.0.0-alpha06'
-    implementation 'androidx.camera:camera-camera2:1.0.0-alpha06'
 
-    implementation 'com.google.android.exoplayer:exoplayer:2.10.1'
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.1'
-    implementation 'com.google.android.exoplayer:exoplayer-dash:2.10.1'
-    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.10.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.10.1'
+    def camerax_version = "1.2.0"
+
+    // The following line is optional, as the core library is included indirectly by camera-camera2
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    // If you want to additionally use the CameraX Lifecycle library
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    // If you want to additionally use the CameraX View class
+    implementation "androidx.camera:camera-view:${camerax_version}"
+
+    def lifecycle_version = "2.5.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+
+    implementation 'com.google.android.exoplayer:exoplayer:2.18.2'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.18.2'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.18.2'
+    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.18.2'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.18.2'
 }

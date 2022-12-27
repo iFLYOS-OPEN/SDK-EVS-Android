@@ -9,7 +9,8 @@ import android.util.Size
 import android.view.*
 import androidx.annotation.RequiresApi
 import androidx.camera.core.Preview
-import androidx.camera.core.PreviewConfig
+import androidx.camera.core.impl.MutableOptionsBundle
+import androidx.camera.core.impl.PreviewConfig
 import java.lang.ref.WeakReference
 import java.util.*
 import kotlin.math.roundToInt
@@ -89,24 +90,27 @@ class AutoFitPreviewBuilder private constructor(
         viewFinderRotation = getDisplaySurfaceRotation(viewFinder.display) ?: 0
 
         // Initialize public use-case with the given config
-        useCase = Preview(config)
+        useCase = Preview.Builder()
+
+            .build()
+
 
         // Every time the view finder is updated, recompute layout
-        useCase.setOnPreviewOutputUpdateListener {
-            //            val viewFinder =
-//                viewFinderRef.get() ?: return@setOnPreviewOutputUpdateListener
-
-            // To update the SurfaceTexture, we have to remove it and re-add it
-            val parent = viewFinder.parent as ViewGroup
-            parent.removeView(viewFinder)
-            parent.addView(viewFinder, 0)
-
-            viewFinder.surfaceTexture = it.surfaceTexture
-            bufferRotation = it.rotationDegrees
-            val rotation = getDisplaySurfaceRotation(viewFinder.display)
-            updateTransform(viewFinder, rotation, it.textureSize, viewFinderDimens)
-            previewTextureSize = it.textureSize
-        }
+//        useCase.setOnPreviewOutputUpdateListener {
+////            val viewFinder =
+////                viewFinderRef.get() ?: return@setOnPreviewOutputUpdateListener
+//
+//            // To update the SurfaceTexture, we have to remove it and re-add it
+//            val parent = viewFinder.parent as ViewGroup
+//            parent.removeView(viewFinder)
+//            parent.addView(viewFinder, 0)
+//
+//            viewFinder.surfaceTexture = it.surfaceTexture
+//            bufferRotation = it.rotationDegrees
+//            val rotation = getDisplaySurfaceRotation(viewFinder.display)
+//            updateTransform(viewFinder, rotation, it.textureSize, viewFinderDimens)
+//            previewTextureSize = it.textureSize
+//        }
 
         // Every time the provided texture view changes, recompute layout
         viewFinder.addOnLayoutChangeListener { view, left, top, right, bottom, _, _, _, _ ->
@@ -126,11 +130,11 @@ class AutoFitPreviewBuilder private constructor(
         // NOTE: Even though using a weak reference should take care of this,
         // we still try to avoid unnecessary calls to the listener this way.
         viewFinder.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(view: View?) {
+            override fun onViewAttachedToWindow(view: View) {
                 displayManager.registerDisplayListener(displayListener, null)
             }
 
-            override fun onViewDetachedFromWindow(view: View?) {
+            override fun onViewDetachedFromWindow(view: View) {
                 displayManager.unregisterDisplayListener(displayListener)
             }
 

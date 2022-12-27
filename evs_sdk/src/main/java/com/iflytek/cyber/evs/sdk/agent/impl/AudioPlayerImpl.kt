@@ -6,6 +6,7 @@ import android.os.Handler
 import com.alibaba.fastjson.JSONObject
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.Util
 import com.iflytek.cyber.evs.sdk.RequestManager
@@ -92,9 +93,19 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
         override fun onPlayerError(
             player: AudioPlayerInstance,
             type: String,
-            error: ExoPlaybackException?
+            error: PlaybackException
         ) {
-            val errorCode: String = when (error?.type) {
+            when (error.errorCode) {
+                // TODO
+            }
+        }
+
+        fun onPlayerError(
+            player: AudioPlayerInstance,
+            type: String,
+            error: ExoPlaybackException
+        ) {
+            val errorCode: String = when (error.type) {
                 ExoPlaybackException.TYPE_UNEXPECTED -> {
                     MEDIA_ERROR_UNKNOWN
                 }
@@ -107,9 +118,9 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
                 ExoPlaybackException.TYPE_RENDERER -> {
                     MEDIA_ERROR_INTERNAL_SERVER_ERROR
                 }
-                ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
-                    MEDIA_ERROR_INTERNAL_DEVICE_ERROR
-                }
+//                ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
+//                    MEDIA_ERROR_INTERNAL_DEVICE_ERROR
+//                }
                 else -> {
                     MEDIA_ERROR_UNKNOWN
                 }
@@ -154,7 +165,7 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
         val player = getPlayer(type)
         if (type == TYPE_PLAYBACK) {
             val uri = Uri.parse(url)
-            currentResourceMediaType = Util.inferContentType(uri.lastPathSegment)
+            currentResourceMediaType = Util.inferContentType(uri.lastPathSegment!!)
         }
         player?.let {
             it.resourceId = resourceId

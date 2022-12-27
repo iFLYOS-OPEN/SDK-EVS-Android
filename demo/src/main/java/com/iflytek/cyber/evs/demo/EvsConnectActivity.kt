@@ -9,12 +9,14 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.Process.myUid
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.*
 import android.widget.AdapterView.OnItemSelectedListener
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -27,6 +29,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import com.iflytek.cyber.evs.demo.databinding.ActivityEvsConnectBinding
 import com.iflytek.cyber.evs.demo.utils.PrefUtil
 import com.iflytek.cyber.evs.sdk.EvsError
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
@@ -35,7 +38,6 @@ import com.iflytek.cyber.evs.sdk.agent.Recognizer
 import com.iflytek.cyber.evs.sdk.agent.Recognizer.Profile.CloseTalk
 import com.iflytek.cyber.evs.sdk.agent.Recognizer.Profile.FarField
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
-import kotlinx.android.synthetic.main.activity_evs_connect.*
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -52,6 +54,8 @@ class EvsConnectActivity : AppCompatActivity() {
 
     private var engineService: EngineService? = null
     private val adapter = ListAdapter()
+
+    private lateinit var binding: ActivityEvsConnectBinding
 
     private var isTtsMode = false
 
@@ -84,7 +88,7 @@ class EvsConnectActivity : AppCompatActivity() {
                 runOnUiThread {
                     adapter.notifyDataSetChanged()
 
-                    recycler_view.smoothScrollToPosition(adapter.itemCount - 1)
+                    binding.recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                 }
             }.start()
         }
@@ -105,7 +109,7 @@ class EvsConnectActivity : AppCompatActivity() {
                     runOnUiThread {
                         adapter.notifyDataSetChanged()
 
-                        recycler_view.smoothScrollToPosition(adapter.itemCount - 1)
+                        binding.recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
                     }
                 }
             }.start()
@@ -119,21 +123,21 @@ class EvsConnectActivity : AppCompatActivity() {
 
         override fun onRecognizeStarted(isExpectReply: Boolean) {
             runOnUiThread {
-                recording_layout.isVisible = true
+                binding.recordingLayout.isVisible = true
 
-                iat_text.text = "识别中"
+                binding.iatText.text = "识别中"
             }
         }
 
         override fun onRecognizeStopped() {
             runOnUiThread {
-                recording_layout.isVisible = false
+                binding.recordingLayout.isVisible = false
             }
         }
 
         override fun onIntermediateText(text: String) {
             runOnUiThread {
-                iat_text.text = text
+                binding.iatText.text = text
             }
         }
 
@@ -223,33 +227,35 @@ class EvsConnectActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun initEvsUi() {
-        evs_connect_layout.isVisible = engineService?.isEvsConnected != true
+        binding.evsConnectLayout.isVisible = engineService?.isEvsConnected != true
 
-        disconnect_cover.isVisible = engineService?.isEvsConnected != true
+        binding.disconnectCover.isVisible = engineService?.isEvsConnected != true
 
         engineService?.getAuthResponse()?.let {
-            connect_to_evs.isEnabled = true
-            token.text = "Token: ${it.accessToken}"
+            binding.connectToEvs.isEnabled = true
+            binding.token.text = "Token: ${it.accessToken}"
         } ?: run {
-            connect_to_evs.isEnabled = false
-            token.text = "请先授权后连接"
+            binding.connectToEvs.isEnabled = false
+            binding.token.text = "请先授权后连接"
         }
 
-        ws_url.text = PreferenceManager.getDefaultSharedPreferences(this)
+        binding.wsUrl.text = PreferenceManager.getDefaultSharedPreferences(this)
             .getString(getString(R.string.key_evs_ws_url), getString(R.string.default_ws_url))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_evs_connect)
+        binding = ActivityEvsConnectBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         supportActionBar?.run {
             setHomeButtonEnabled(true)
             setDisplayHomeAsUpEnabled(true)
         }
 
-        connect_to_evs.setOnClickListener {
+        binding.connectToEvs.setOnClickListener {
             if (hasPermission()) {
+                Log.d(TAG, "has normal permission")
                 engineService?.getAuthResponse()?.let {
                     if (engineService?.getAppAction() != null) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -275,6 +281,7 @@ class EvsConnectActivity : AppCompatActivity() {
                     // need auth at first
                 }
             } else {
+                Log.d(TAG, "Not has normal permission")
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_SETTINGS),
@@ -282,7 +289,7 @@ class EvsConnectActivity : AppCompatActivity() {
                 )
             }
         }
-        audio_in.setOnClickListener {
+        binding.audioIn.setOnClickListener {
             if (hasPermission()) {
                 engineService?.sendAudioIn()
             } else {
@@ -293,8 +300,8 @@ class EvsConnectActivity : AppCompatActivity() {
                 )
             }
         }
-        send_text_in.setOnClickListener {
-            val text = text_in.text.toString()
+        binding.sendTextIn.setOnClickListener {
+            val text = binding.textIn.text.toString()
             if (text.isNotEmpty()) {
                 if (isTtsMode) {
                     engineService?.sendTts(text)
@@ -302,25 +309,30 @@ class EvsConnectActivity : AppCompatActivity() {
                     engineService?.sendTextIn(text)
                 }
             } else {
-                Snackbar.make(container, "文本不能为空", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.container, "文本不能为空", Snackbar.LENGTH_SHORT).show()
             }
         }
-        text_in.setOnLongClickListener {
+        binding.textIn.setOnLongClickListener {
             if (!isTtsMode) {
                 isTtsMode = true
-                send_text_in.text = "合成"
+                binding.sendTextIn.text = "合成"
             } else {
                 isTtsMode = false
-                send_text_in.text = "识别"
+                binding.sendTextIn.text = "识别"
             }
             false
         }
 
-        text_in.hint = "长按切换识别/合成"
+        binding.textIn.hint = "长按切换识别/合成"
 
-        recycler_view.adapter = adapter
-        recycler_view.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
-        recycler_view.itemAnimator = DefaultItemAnimator()
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.addItemDecoration(
+            DividerItemDecoration(
+                this,
+                LinearLayoutManager.VERTICAL
+            )
+        )
+        binding.recyclerView.itemAnimator = DefaultItemAnimator()
 
         val intentFilter = IntentFilter()
         intentFilter.addAction(EngineService.ACTION_EVS_CONNECTED)
@@ -332,51 +344,51 @@ class EvsConnectActivity : AppCompatActivity() {
         startService(intent)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
-        btn_resume.setOnClickListener {
+        binding.btnResume.setOnClickListener {
             if (engineService?.isEvsConnected == true) {
                 engineService?.getPlaybackController()
                     ?.sendCommand(PlaybackController.Command.Resume)
             }
         }
-        btn_pause.setOnClickListener {
+        binding.btnPause.setOnClickListener {
             if (engineService?.isEvsConnected == true) {
                 engineService?.getPlaybackController()
                     ?.sendCommand(PlaybackController.Command.Pause)
             }
         }
-        btn_previous.setOnClickListener {
+        binding.btnPrevious.setOnClickListener {
             if (engineService?.isEvsConnected == true) {
                 engineService?.getPlaybackController()
                     ?.sendCommand(PlaybackController.Command.Previous)
             }
         }
-        btn_next.setOnClickListener {
+        binding.btnNext.setOnClickListener {
             if (engineService?.isEvsConnected == true) {
                 engineService?.getPlaybackController()
                     ?.sendCommand(PlaybackController.Command.Next)
             }
         }
-        btn_exit.setOnClickListener {
+        binding.btnExit.setOnClickListener {
             if (engineService?.isEvsConnected == true) {
                 engineService?.getPlaybackController()
                     ?.sendCommand(PlaybackController.Command.Exit)
             }
         }
-        send_state_sync.setOnClickListener {
+        binding.sendStateSync.setOnClickListener {
             if (engineService?.isEvsConnected == true) {
                 engineService?.getSystem()?.sendStateSync()
             }
         }
-        custom_context.setOnCheckedChangeListener { _, isChecked ->
-            btn_custom_context.isEnabled = isChecked
+        binding.customContext.setOnCheckedChangeListener { _, isChecked ->
+            binding.btnCustomContext.isEnabled = isChecked
 
             val pref = PreferenceManager.getDefaultSharedPreferences(this)
             pref.edit().putBoolean(getString(R.string.key_custom_context_enabled), isChecked)
                 .apply()
         }
-        custom_context.isChecked = PreferenceManager.getDefaultSharedPreferences(this)
+        binding.customContext.isChecked = PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(getString(R.string.key_custom_context_enabled), false)
-        btn_custom_context.setOnClickListener {
+        binding.btnCustomContext.setOnClickListener {
             val currentContext = engineService?.getCurrentIflyosContext()
             val json = JSONObject(currentContext)
 
@@ -384,14 +396,14 @@ class EvsConnectActivity : AppCompatActivity() {
             editContext.putExtra("default_context", json.toString(4))
             startActivity(editContext)
         }
-        background_recognize.setOnCheckedChangeListener { _, isChecked ->
+        binding.backgroundRecognize.setOnCheckedChangeListener { _, isChecked ->
             val pref = PreferenceManager.getDefaultSharedPreferences(this)
             pref.edit().putBoolean(getString(R.string.key_background_recognize), isChecked)
                 .apply()
         }
-        background_recognize.isChecked = PreferenceManager.getDefaultSharedPreferences(this)
+        binding.backgroundRecognize.isChecked = PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(getString(R.string.key_background_recognize), false)
-        cancel.setOnClickListener {
+        binding.cancel.setOnClickListener {
             engineService?.getRecognizer()?.requestCancel()
         }
         val profile = PreferenceManager.getDefaultSharedPreferences(this)
@@ -400,11 +412,11 @@ class EvsConnectActivity : AppCompatActivity() {
                 CloseTalk.value
             )
         if (profile == FarField.value) {
-            profile_radio.check(R.id.radio_far_field)
+            binding.profileRadio.check(R.id.radio_far_field)
         } else {
-            profile_radio.check(R.id.radio_close_talk)
+            binding.profileRadio.check(R.id.radio_close_talk)
         }
-        profile_radio.setOnCheckedChangeListener { _, checkedId ->
+        binding.profileRadio.setOnCheckedChangeListener { _, checkedId ->
             val pref = PreferenceManager.getDefaultSharedPreferences(this)
             val value = if (checkedId == R.id.radio_far_field) {
                 FarField.value
@@ -413,22 +425,22 @@ class EvsConnectActivity : AppCompatActivity() {
             }
             pref.edit().putString(getString(R.string.key_recognize_profile), value).apply()
         }
-        disable_response_sound.isChecked = PreferenceManager.getDefaultSharedPreferences(this)
+        binding.disableResponseSound.isChecked = PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(getString(R.string.key_disable_response_sound), false)
-        disable_response_sound.setOnCheckedChangeListener { _, _ ->
+        binding.disableResponseSound.setOnCheckedChangeListener { _, _ ->
             val pref = PreferenceManager.getDefaultSharedPreferences(this)
             pref.edit().putBoolean(
                 getString(R.string.key_disable_response_sound),
-                disable_response_sound.isChecked
+                binding.disableResponseSound.isChecked
             ).apply()
         }
 
         PreferenceManager.getDefaultSharedPreferences(this)
             .getBoolean(getString(R.string.key_custom_location), false)
             .let { isCustomLocationEnabled ->
-                custom_location.isChecked = isCustomLocationEnabled
+                binding.customLocation.isChecked = isCustomLocationEnabled
 
-                location_container.setBackgroundColor(
+                binding.locationContainer.setBackgroundColor(
                     if (isCustomLocationEnabled) {
                         Color.TRANSPARENT
                     } else {
@@ -436,17 +448,17 @@ class EvsConnectActivity : AppCompatActivity() {
                     }
                 )
 
-                latitude.isEnabled = isCustomLocationEnabled
-                longitude.isEnabled = isCustomLocationEnabled
-                apply_custom_location.isEnabled = isCustomLocationEnabled
+                binding.latitude.isEnabled = isCustomLocationEnabled
+                binding.longitude.isEnabled = isCustomLocationEnabled
+                binding.applyCustomLocation.isEnabled = isCustomLocationEnabled
             }
         initCustomLocationValue()
-        custom_location.setOnCheckedChangeListener { _, isChecked ->
+        binding.customLocation.setOnCheckedChangeListener { _, isChecked ->
             PreferenceManager.getDefaultSharedPreferences(this).edit()
                 .putBoolean(getString(R.string.key_custom_location), isChecked)
                 .apply()
 
-            location_container.setBackgroundColor(
+            binding.locationContainer.setBackgroundColor(
                 if (isChecked) {
                     Color.TRANSPARENT
                 } else {
@@ -454,35 +466,36 @@ class EvsConnectActivity : AppCompatActivity() {
                 }
             )
 
-            if (latitude.hasFocus()) {
-                latitude.clearFocus()
+            if (binding.latitude.hasFocus()) {
+                binding.latitude.clearFocus()
             }
 
-            latitude.isEnabled = isChecked
-            longitude.isEnabled = isChecked
-            apply_custom_location.isEnabled = isChecked
+            binding.latitude.isEnabled = isChecked
+            binding.longitude.isEnabled = isChecked
+            binding.applyCustomLocation.isEnabled = isChecked
         }
-        apply_custom_location.setOnClickListener {
+        binding.applyCustomLocation.setOnClickListener {
             var setSucceed: Boolean
             try {
-                setSucceed = if (latitude.text.isNullOrEmpty() || longitude.text.isNullOrEmpty()) {
-                    false
-                } else {
-                    val latitudeText = latitude.text.toString().toFloat()
-                    val longitudeText = longitude.text.toString().toFloat()
-
-                    if (latitudeText in -90f..90f && longitudeText in -180f..180f) {
-                        PreferenceManager.getDefaultSharedPreferences(this)
-                            .edit()
-                            .putFloat(getString(R.string.key_latitude), latitudeText)
-                            .putFloat(getString(R.string.key_longitude), longitudeText)
-                            .apply()
-
-                        true
-                    } else {
+                setSucceed =
+                    if (binding.latitude.text.isNullOrEmpty() || binding.longitude.text.isNullOrEmpty()) {
                         false
+                    } else {
+                        val latitudeText = binding.latitude.text.toString().toFloat()
+                        val longitudeText = binding.longitude.text.toString().toFloat()
+
+                        if (latitudeText in -90f..90f && longitudeText in -180f..180f) {
+                            PreferenceManager.getDefaultSharedPreferences(this)
+                                .edit()
+                                .putFloat(getString(R.string.key_latitude), latitudeText)
+                                .putFloat(getString(R.string.key_longitude), longitudeText)
+                                .apply()
+
+                            true
+                        } else {
+                            false
+                        }
                     }
-                }
             } catch (t: Throwable) {
                 setSucceed = false
             }
@@ -492,7 +505,7 @@ class EvsConnectActivity : AppCompatActivity() {
                 initCustomLocationValue()
             }
         }
-        clear_custom_location.setOnClickListener {
+        binding.clearCustomLocation.setOnClickListener {
             PreferenceManager.getDefaultSharedPreferences(this)
                 .edit()
                 .remove(getString(R.string.key_latitude))
@@ -501,20 +514,22 @@ class EvsConnectActivity : AppCompatActivity() {
 
             initCustomLocationValue()
         }
-    }
 
-    override fun onBackPressed() {
-        when {
-            recording_layout.isVisible -> {
-                engineService?.getRecognizer()?.requestCancel()
+        onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when {
+                    binding.recordingLayout.isVisible -> {
+                        engineService?.getRecognizer()?.requestCancel()
+                    }
+                    binding.drawer.isDrawerOpen(GravityCompat.END) -> {
+                        binding.drawer.closeDrawer(GravityCompat.END)
+                    }
+                    else -> {
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                }
             }
-            drawer.isDrawerOpen(GravityCompat.END) -> {
-                drawer.closeDrawer(GravityCompat.END)
-            }
-            else -> {
-                super.onBackPressed()
-            }
-        }
+        })
     }
 
     override fun onDestroy() {
@@ -526,10 +541,17 @@ class EvsConnectActivity : AppCompatActivity() {
 
     private fun hasUsageStatsPermission(): Boolean {
         val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOps.checkOpNoThrow(
-            "android:get_usage_stats", android.os.Process.myUid(),
-            packageName
-        )
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(
+                "android:get_usage_stats",
+                android.os.Process.myUid(), packageName
+            )
+        } else {
+            appOps.checkOpNoThrow(
+                "android:get_usage_stats",
+                android.os.Process.myUid(), packageName
+            )
+        }
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
@@ -539,9 +561,9 @@ class EvsConnectActivity : AppCompatActivity() {
         val latitude = pref.getFloat(getString(R.string.key_latitude), Float.MIN_VALUE)
         val longitude = pref.getFloat(getString(R.string.key_longitude), Float.MIN_VALUE)
         if (latitude != Float.MIN_VALUE && longitude != Float.MIN_VALUE) {
-            current_location.text = "当前自定义经纬度: $longitude, $latitude"
+            binding.currentLocation.text = "当前自定义经纬度: $longitude, $latitude"
         } else {
-            current_location.text = "当前自定义经纬度: 无"
+            binding.currentLocation.text = "当前自定义经纬度: 无"
         }
     }
 
@@ -597,12 +619,12 @@ class EvsConnectActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
 
         if (adapter.itemCount > 0)
-            recycler_view.smoothScrollToPosition(adapter.itemCount - 1)
+            binding.recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            android.R.id.home -> onBackPressed()
+            android.R.id.home -> onBackPressedDispatcher.onBackPressed()
             R.id.mi_clear_log -> {
                 adapter.list.clear()
                 adapter.notifyDataSetChanged()
@@ -620,8 +642,9 @@ class EvsConnectActivity : AppCompatActivity() {
                 } else {
                     builder.setNegativeButton(R.string.copy_access_token) { _, _ ->
                         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        cm.primaryClip =
+                        cm.setPrimaryClip(
                             ClipData.newPlainText(response.accessToken, response.accessToken)
+                        )
                     }
                     getString(
                         R.string.auth_params_summary,
@@ -634,7 +657,7 @@ class EvsConnectActivity : AppCompatActivity() {
             }
             R.id.mi_start_evaluating -> {
                 if (engineService?.isEvsConnected != true) {
-                    Snackbar.make(container, "请先连接 EVS", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(binding.container, "请先连接 EVS", Snackbar.LENGTH_SHORT).show()
                     return true
                 }
 
@@ -711,6 +734,7 @@ class EvsConnectActivity : AppCompatActivity() {
     }
 
     private fun hasPermission(): Boolean {
+        Log.d(TAG, "check self permission")
         return PermissionChecker.checkSelfPermission(
             this,
             Manifest.permission.RECORD_AUDIO

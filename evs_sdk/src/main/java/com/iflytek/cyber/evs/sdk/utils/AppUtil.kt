@@ -28,8 +28,8 @@ object AppUtil {
             val runningTasks: List<ActivityManager.RunningTaskInfo> = activityManager.getRunningTasks(1)
 
             if (runningTasks.isNotEmpty()) {
-                val pkgName = runningTasks[0].topActivity.packageName
-                val clsName = runningTasks[0].topActivity.className
+                val pkgName = runningTasks[0].topActivity?.packageName
+                val clsName = runningTasks[0].topActivity?.className
 
                 return if (pkgName != context.packageName)
                     AppInfo("", pkgName, clsName)
