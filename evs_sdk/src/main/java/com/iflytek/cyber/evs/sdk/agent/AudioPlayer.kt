@@ -19,6 +19,7 @@ abstract class AudioPlayer {
         const val NAME_RING_PROGRESS_SYNC = "${Constant.NAMESPACE_AUDIO_PLAYER}.ring.progress_sync"
         const val NAME_TTS_PROGRESS_SYNC = "${Constant.NAMESPACE_AUDIO_PLAYER}.tts.progress_sync"
         const val NAME_TTS_TEXT_IN = "${Constant.NAMESPACE_AUDIO_PLAYER}.tts.text_in"
+        const val NAME_TEXT_IN = "${Constant.NAMESPACE_RECOGNIZER}.text_in"
 
         const val NAME_AUDIO_OUT = "${Constant.NAMESPACE_AUDIO_PLAYER}.audio_out"
 
@@ -46,8 +47,10 @@ abstract class AudioPlayer {
         const val KEY_FAILURE_CODE = "failure_code"
         const val KEY_PLAYBACK = "playback"
         const val KEY_STATE = "state"
-        const val KEY_TEXT = "text"
+        const val KEY_TEXT = "query"
         const val KEY_METADATA = "metadata"
+        const val KEY_WITH_TTS = "with_tts"
+        const val KEY_PROFILE = "profile"
 
         const val BEHAVIOR_IMMEDIATELY = "IMMEDIATELY"
         const val BEHAVIOR_UPCOMING = "UPCOMING"
@@ -155,15 +158,17 @@ abstract class AudioPlayer {
     abstract fun moveToBackground(type: String): Boolean
 
     /**
-     * 发送合成文本，调用云端合成。
-     * @param text 待合成文本
+     * 发送翻译/合成文本，调用云端翻译/合成。
+     * @param text 待翻译/合成文本
      */
     @CallSuper
     open fun sendTtsText(text: String) {
         val payload = JSONObject()
         payload[KEY_TEXT] = text
+        payload[KEY_WITH_TTS] = true
+        payload[KEY_PROFILE] = "OCR_TRANS_TTS"
 
-        RequestManager.sendRequest(NAME_TTS_TEXT_IN, payload)
+        RequestManager.sendRequest(NAME_TEXT_IN, payload)
     }
 
     /**

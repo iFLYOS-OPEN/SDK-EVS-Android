@@ -291,7 +291,8 @@ class EvsConnectActivity : AppCompatActivity() {
         }
         binding.audioIn.setOnClickListener {
             if (hasPermission()) {
-                engineService?.sendAudioIn()
+                var trans_mode = isTtsMode
+                engineService?.sendAudioIn(trans_mode)
             } else {
                 ActivityCompat.requestPermissions(
                     this,
@@ -315,7 +316,7 @@ class EvsConnectActivity : AppCompatActivity() {
         binding.textIn.setOnLongClickListener {
             if (!isTtsMode) {
                 isTtsMode = true
-                binding.sendTextIn.text = "合成"
+                binding.sendTextIn.text = "翻译"
             } else {
                 isTtsMode = false
                 binding.sendTextIn.text = "识别"
@@ -323,7 +324,7 @@ class EvsConnectActivity : AppCompatActivity() {
             false
         }
 
-        binding.textIn.hint = "长按切换识别/合成"
+        binding.textIn.hint = "长按切换识别/翻译"
 
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addItemDecoration(

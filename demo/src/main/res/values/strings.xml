@@ -24,7 +24,7 @@
     <string name="default_auth_url">https://auth.iflyos.cn</string>
     <string name="key_client_id">client_id</string>
     <string name="title_client_id">client_id </string>
-    <string name="default_client_id" tools:ignore="TypographyDashes">ceb62135-38a7-42c3-b721-842f3ed596a8</string>
+    <string name="default_client_id" tools:ignore="TypographyDashes">3244a1f2-a4a2-4a96-8457-d1228d66f787</string>
     <string name="key_reset">reset</string>
     <string name="key_device_id">device_id</string>
     <string name="title_device_id">设备 ID</string>

@@ -189,8 +189,8 @@ class EngineService : EvsService() {
         sendBroadcast(intent)
     }
 
-    fun sendAudioIn(replyKey: String? = null) {
-        getRecognizer().sendAudioIn(replyKey)
+    fun sendAudioIn(trans_mode: Boolean = false, replyKey: String? = null) {
+        getRecognizer().sendAudioIn(trans_mode, replyKey)
     }
 
     fun sendTextIn(query: String, replyKey: String? = null) {

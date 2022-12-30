@@ -53,6 +53,7 @@ abstract class Recognizer {
         internal const val KEY_WAKE_UP = "iflyos_wake_up"
         internal const val KEY_BACKGROUND_RECOGNIZE = "background_recognize"
         internal const val KEY_EVALUATE = "evaluate"
+        internal const val KEY_TRANSLATION = "translation"
         internal const val KEY_LANGUAGE = "language"
         internal const val KEY_CATEGORY = "category"
         internal const val KEY_TIMEOUT = "timeout"
@@ -272,7 +273,7 @@ abstract class Recognizer {
         isBackgroundRecognize = false
     }
 
-    private fun generatePayload(replyKey: String? = null): JSONObject {
+    private fun generatePayload(trans_mode: Boolean = false, replyKey: String? = null): JSONObject {
         val payload = JSONObject()
         if (profile == Profile.CloseTalk) {
             payload[KEY_PROFILE] = "CLOSE_TALK"
@@ -298,7 +299,9 @@ abstract class Recognizer {
             payload[KEY_REPLY_KEY] = replyKey
         }
         payload[KEY_ENABLE_VAD] = !isLocalVad
-
+        if(trans_mode){
+            payload[KEY_TRANSLATION] = true
+        }
         return payload
     }
 
@@ -316,7 +319,7 @@ abstract class Recognizer {
         }
 
         if (!isPreventExpectReply) {
-            val payload = generatePayload(replyKey)
+            val payload = generatePayload(false, replyKey)
 
             RequestManager.sendRequest(NAME_AUDIO_IN, payload, object : RequestCallback {
                 override fun onResult(result: Result) {
@@ -349,15 +352,16 @@ abstract class Recognizer {
      * @param requestCallback 结果回调
      */
     fun sendAudioIn(
+        trans_mode: Boolean = false,
         replyKey: String?,
         wakeUpData: String? = null,
-        requestCallback: RequestCallback? = null
+        requestCallback: RequestCallback? = null,
     ) {
         if (isRecording()) {
             requestCancel()
         }
 
-        val payload = generatePayload()
+        val payload = generatePayload(trans_mode)
 
         if (!replyKey.isNullOrEmpty()) {
             payload[KEY_REPLY_KEY] = replyKey
