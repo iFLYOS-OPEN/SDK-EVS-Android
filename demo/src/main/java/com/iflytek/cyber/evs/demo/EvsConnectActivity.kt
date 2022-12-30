@@ -525,7 +525,7 @@ class EvsConnectActivity : AppCompatActivity() {
                         binding.drawer.closeDrawer(GravityCompat.END)
                     }
                     else -> {
-                        onBackPressedDispatcher.onBackPressed()
+                        finish()
                     }
                 }
             }
@@ -625,6 +625,13 @@ class EvsConnectActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> onBackPressedDispatcher.onBackPressed()
+            R.id.mi_settings -> {
+                if (binding.drawer.isDrawerOpen(GravityCompat.END)) {
+                    binding.drawer.closeDrawer(GravityCompat.END)
+                } else {
+                    binding.drawer.openDrawer(GravityCompat.END)
+                }
+            }
             R.id.mi_clear_log -> {
                 adapter.list.clear()
                 adapter.notifyDataSetChanged()

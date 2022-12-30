@@ -31,13 +31,13 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <CheckBox
+            <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/custom_scope_data"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/custom_scope_data" />
 
-            <EditText
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/scope_data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/request"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -95,7 +95,7 @@
             android:background="@android:color/white"
             android:visibility="invisible" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/open_browser"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

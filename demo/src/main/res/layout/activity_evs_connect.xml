@@ -48,7 +48,7 @@
                     android:focusable="true"
                     android:padding="4dp"
                     android:src="@drawable/ic_mic_black_24dp"
-                    android:tint="?colorAccent" />
+                    app:tint="?colorAccent" />
 
                 <EditText
                     android:id="@+id/text_in"
@@ -206,40 +206,35 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="playback_controller.PREVIOUS"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/black" />
+                        android:textAllCaps="false" />
 
                     <Button
                         android:id="@+id/btn_resume"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="playback_controller.RESUME"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/black" />
+                        android:textAllCaps="false" />
 
                     <Button
                         android:id="@+id/btn_pause"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="playback_controller.PAUSE"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/black" />
+                        android:textAllCaps="false" />
 
                     <Button
                         android:id="@+id/btn_next"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="playback_controller.NEXT"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/black" />
+                        android:textAllCaps="false" />
 
                     <Button
                         android:id="@+id/btn_exit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="playback_controller.EXIT"
-                        android:textAllCaps="false"
-                        android:textColor="@android:color/black" />
+                        android:textAllCaps="false" />
 
                 </com.google.android.flexbox.FlexboxLayout>
 
@@ -378,14 +373,12 @@
 
                         <Button
                             android:id="@+id/apply_custom_location"
-                            style="@style/Widget.AppCompat.Button.Small"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/save" />
 
                         <Button
                             android:id="@+id/clear_custom_location"
-                            style="@style/Widget.AppCompat.Button.Small"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/clear" />
